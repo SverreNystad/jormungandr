@@ -82,7 +82,8 @@ class Fafnir(nn.Module):
         flattened_mask = mask.flatten(1)
 
         encoder_outputs = self.encoder.forward(
-            flattened_feature_maps, position_embedding=position_embedding
+            flattened_feature_maps,
+            position_embedding=position_embedding,
         )
 
         # Decoder
