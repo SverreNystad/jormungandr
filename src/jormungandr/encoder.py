@@ -1,8 +1,18 @@
+from typing import Protocol 
 from torch import nn, Tensor
 from mamba_ssm import Mamba
+import torch
 
+class Encoder(Protocol):
+    def forward(
+        self,
+        flattened_feature_maps: Tensor,
+        position_embedding: Tensor | None = None,
+        mask: Tensor | None = None,
+    ) -> torch.Tensor:
+        ...
 
-class MambaEncoder(nn.Module):
+class MambaEncoder(nn.Module, Encoder):
     def __init__(
         self,
         model_dimension: int = 16,
@@ -40,3 +50,6 @@ class MambaEncoder(nn.Module):
             x = x + position_embedding if position_embedding is not None else x
             x = layer(x)
         return x
+
+
+ 
