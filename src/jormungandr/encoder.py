@@ -60,4 +60,7 @@ class DETREncoder(nn.Module, Encoder):
         self.encoder = DetrForObjectDetection.from_pretrained(model_name).model.encoder
 
     def forward(self, x: Tensor, position_embedding: Tensor | None = None) -> Tensor:
-        return self.encoder(x, pos=position_embedding)[0]
+        encoder_outputs = self.encoder.forward(
+            x, spatial_position_embeddings=position_embedding
+        )
+        return encoder_outputs.last_hidden_state
