@@ -5,19 +5,25 @@ import pytest
 
 
 @pytest.mark.parametrize(
-    "batch_size, channels, height, width, num_queries",
+    "batch_size, channels, height, width, num_queries, encoder_type",
     [
-        (1, 3, 224, 224, 1),
-        (2, 3, 100, 100, 50),
-        (1, 3, 1000, 1000, 100),
+        (1, 3, 224, 224, 1, "mamba"),
+        (2, 3, 100, 100, 50, "mamba"),
+        (1, 3, 1000, 1000, 100, "mamba"),
+        (1, 3, 224, 224, 1, "detr"),
+        (2, 3, 100, 100, 50, "detr"),
+        (1, 3, 1000, 1000, 100, "detr"),
     ],
 )
-def test_fafnir_forward_pass(batch_size, channels, height, width, num_queries):
+def test_fafnir_forward_pass(
+    batch_size, channels, height, width, num_queries, encoder_type
+):
     pixel_values = torch.randn(batch_size, channels, height, width)
     backbone = Backbone()
 
-    fafnir = Fafnir(backbone=backbone, num_queries=num_queries)
-
+    fafnir = Fafnir(
+        backbone=backbone, num_queries=num_queries, encoder_type=encoder_type
+    )
     class_labels, bbox_coordinates = fafnir.forward(pixel_values)
 
     assert class_labels.shape[0] == batch_size, (
