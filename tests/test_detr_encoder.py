@@ -7,8 +7,15 @@ import pytest
 @pytest.mark.skipif(
     not torch.cuda.is_available(), reason="CUDA is required for this test"
 )
-def test_detr_encoder_inference():
-    batch_size, sequence_length, model_dimension = 2, 64, 256 
+@pytest.mark.parametrize(
+    "batch_size, sequence_length, model_dimension",
+    [
+        (2, 64, 256),
+        (4, 128, 256),
+        (1, 32, 256),
+    ],
+)
+def test_detr_encoder_inference(batch_size, sequence_length, model_dimension):
     x = torch.randn(batch_size, sequence_length, model_dimension).to("cuda")
     
     encoder = DETREncoder(model_name="facebook/detr-resnet-50").to("cuda")
