@@ -1,5 +1,6 @@
 import torch
 from jormungandr.encoder import MambaEncoder
+from jormungandr.embedder import DetrSinePositionEmbedding
 import pytest
 
 
@@ -21,17 +22,21 @@ def test_mamba_encoder_inference():
     not torch.cuda.is_available(), reason="CUDA is required for this test"
 )
 def test_mamba_encoder_inference_with_position_embedding():
-    batch_size, sequence_length, model_dimension = 2, 64, 16
+    weidth, height = 8, 8
+    sequence_length = weidth * height
+    batch_size,model_dimension = 2, 16
+    embedder_shape = (batch_size, 0, weidth, height)
     x = torch.randn(batch_size, sequence_length, model_dimension).to("cuda")
-    embedding = torch.randn(batch_size, model_dimension).to("cuda")
-
+    
+    embedder = DetrSinePositionEmbedding(num_position_features=model_dimension // 2).to("cuda")
+    embedding = embedder(embedder_shape, device="cuda", dtype=x.dtype)
     encoder = MambaEncoder(model_dimension=model_dimension).to("cuda")
     encoder_with_em = MambaEncoder(
-        model_dimension=model_dimension, position_embedding=embedding
+        model_dimension=model_dimension
     ).to("cuda")
 
     y = encoder(x)
-    y_with_em = encoder_with_em(x)
+    y_with_em = encoder_with_em(x, embedding)
 
     assert y.shape == x.shape, f"Expected output shape {x.shape}, got {y.shape}"
     assert not y.equal(x), "Output should be different from input after encoding"
