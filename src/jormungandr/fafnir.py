@@ -3,6 +3,7 @@ import torch
 
 from jormungandr.encoder import MambaEncoder
 from jormungandr.detr_decoder import DETRDecoder
+from jormungandr.output_head import FCNNPredictionHead
 from jormungandr.backbone import Backbone
 from jormungandr.embedder import Embedder, DetrSinePositionEmbedding
 
@@ -46,10 +47,14 @@ class Fafnir(nn.Module):
             num_queries=num_queries, hidden_dim=model_dimension
         ).to(device)
 
+        self.output_head = FCNNPredictionHead(model_name="facebook/detr-resnet-50").to(
+            device
+        )
+
     def forward(
         self,
         pixel_values: Tensor,
-    ) -> Tensor:
+    ) -> tuple[Tensor, Tensor]:
         pixel_values = pixel_values.to(self.device)
         # Backbone
         feature_maps, mask = self.backbone.forward(pixel_values)
@@ -82,4 +87,9 @@ class Fafnir(nn.Module):
             encoder_mask_flattened=flattened_mask,
         )
         print(f"Decoder output shape: {decoder_output.shape}")
-        return decoder_output
+
+        # Detection Head
+        class_labels, bbox_coordinates = self.output_head.forward(decoder_output)
+        print(f"Class labels shape: {class_labels.shape}")
+        print(f"BBox coordinates shape: {bbox_coordinates.shape}")
+        return class_labels, bbox_coordinates

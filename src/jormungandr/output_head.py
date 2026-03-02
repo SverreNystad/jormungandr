@@ -1,7 +1,8 @@
 from torch import nn, Tensor
+from transformers import DetrForObjectDetection
 
 
-class MLPPredictionHead(nn.Module):
+class FCNNPredictionHead(nn.Module):
     """
     Very simple multi-layer perceptron (MLP, also called FFN), used to predict the normalized center coordinates,
     height and width of a bounding box w.r.t. an image.
@@ -10,19 +11,34 @@ class MLPPredictionHead(nn.Module):
 
     def __init__(
         self,
-        input_dim: int,
-        hidden_dim: int,
-        output_dim: int,
-        num_layers: int,
+        model_name: str = "facebook/detr-resnet-50",
     ):
         super().__init__()
-        self.num_layers = num_layers
-        h = [hidden_dim] * (num_layers - 1)
-        self.layers = nn.ModuleList(
-            nn.Linear(n, k) for n, k in zip([input_dim] + h, h + [output_dim])
-        )
+        self.class_labels_classifier = DetrForObjectDetection.from_pretrained(
+            model_name
+        ).class_labels_classifier
+        self.bbox_predictor = DetrForObjectDetection.from_pretrained(
+            model_name
+        ).bbox_predictor
 
-    def forward(self, x: Tensor) -> Tensor:
-        for i, layer in enumerate(self.layers):
-            x = nn.functional.relu(layer(x)) if i < self.num_layers - 1 else layer(x)
-        return x
+    def forward(
+        self,
+        decoder_output: Tensor,
+        labels: list[dict] | None = None,
+    ) -> tuple[Tensor, Tensor]:
+        """
+        Args:
+            decoder_output: Tensor of shape (batch_size, num_queries, hidden_dim)
+            labels (`list[Dict]` of len `(batch_size,)`, *optional*):
+                Labels for computing the bipartite matching loss. List of dicts, each dictionary containing at least the
+                following 2 keys: 'class_labels' and 'boxes' (the class labels and bounding boxes of an image in the batch
+                respectively). The class labels themselves should be a `torch.LongTensor` of len `(number of bounding boxes
+                in the image,)` and the boxes a `torch.FloatTensor` of shape `(number of bounding boxes in the image, 4)`.
+        Returns:
+            class_labels: Tensor of shape (batch_size, num_queries, num_classes)
+            bbox_coordinates: Tensor of shape (batch_size, num_queries, 4) with normalized center coordinates, height and width
+        """
+        class_labels = self.class_labels_classifier(decoder_output)
+        bbox_coordinates = self.bbox_predictor(decoder_output).sigmoid()
+
+        return class_labels, bbox_coordinates
