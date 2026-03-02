@@ -1,7 +1,7 @@
 from torch import nn, Tensor
 import torch
 
-from jormungandr.encoder import MambaEncoder
+from jormungandr.encoder import MambaEncoder, DETREncoder
 from jormungandr.detr_decoder import DETRDecoder
 from jormungandr.output_head import FCNNPredictionHead
 from jormungandr.backbone import Backbone
@@ -13,6 +13,7 @@ class Fafnir(nn.Module):
         self,
         backbone: Backbone,
         embedder: Embedder | None = None,
+        encoder_type: str = "mamba",
         model_dimension: int = 256,
         num_encoder_layers: int = 6,
         num_decoder_layers: int = 6,
@@ -38,9 +39,16 @@ class Fafnir(nn.Module):
         self.embedder = self.embedder.to(device)
 
         # Encoder
-        self.mamba_encoder = MambaEncoder(
-            model_dimension=model_dimension, num_layers=num_encoder_layers
-        ).to(device)
+        self.encoder = None
+        match encoder_type.lower():
+            case "mamba":
+                self.encoder = MambaEncoder(
+                    model_dimension=model_dimension, num_layers=num_encoder_layers
+                ).to(device)
+            case "detr":
+                self.encoder = DETREncoder().to(device)
+            case _:
+                raise ValueError(f"Unsupported encoder type: {encoder_type}")
 
         # TODO: Find if hidden dim is model dimension or something else
         self.decoder = DETRDecoder(
@@ -75,7 +83,7 @@ class Fafnir(nn.Module):
         print(f"Flattened feature maps shape: {flattened_feature_maps.shape}")
         print(f"Flattened mask shape: {flattened_mask.shape}")
 
-        encoder_outputs = self.mamba_encoder.forward(
+        encoder_outputs = self.encoder.forward(
             flattened_feature_maps, position_embedding=position_embedding
         )
 

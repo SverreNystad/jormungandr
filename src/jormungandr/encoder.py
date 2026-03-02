@@ -1,4 +1,4 @@
-from typing import Protocol 
+from typing import Protocol
 from mamba_ssm import Mamba
 from transformers import DetrForObjectDetection
 from torch import nn, Tensor
@@ -11,8 +11,8 @@ class Encoder(Protocol):
         flattened_feature_maps: Tensor,
         position_embedding: Tensor | None = None,
         mask: Tensor | None = None,
-    ) -> torch.Tensor:
-        ...
+    ) -> torch.Tensor: ...
+
 
 class MambaEncoder(nn.Module, Encoder):
     def __init__(
@@ -53,15 +53,11 @@ class MambaEncoder(nn.Module, Encoder):
             x = layer(x)
         return x
 
+
 class DETREncoder(nn.Module, Encoder):
-    def __init__(
-        self,
-        model_name: str = "facebook/detr-resnet-50"
-    ):
+    def __init__(self, model_name: str = "facebook/detr-resnet-50"):
         super(DETREncoder, self).__init__()
-        self.encoder = DetrForObjectDetection.from_pretrained(
-            model_name
-        ).model.encoder
-    
+        self.encoder = DetrForObjectDetection.from_pretrained(model_name).model.encoder
+
     def forward(self, x: Tensor, position_embedding: Tensor | None = None) -> Tensor:
         return self.encoder(x, pos=position_embedding)[0]
