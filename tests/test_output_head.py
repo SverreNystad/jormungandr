@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from jormungandr.output_head import MLPPredictionHead
+from jormungandr.output_head import FCNNPredictionHead
 
 
 @pytest.mark.parametrize(
@@ -13,7 +13,7 @@ from jormungandr.output_head import MLPPredictionHead
     ],
 )
 def test_forward_shape_and_dtype(batch, in_dim, hidden_dim, out_dim, num_layers):
-    head = MLPPredictionHead(in_dim, hidden_dim, out_dim, num_layers)
+    head = FCNNPredictionHead(in_dim, hidden_dim, out_dim, num_layers)
 
     x = torch.randn(batch, in_dim, dtype=torch.float32)
     y = head(x)
@@ -25,7 +25,7 @@ def test_forward_shape_and_dtype(batch, in_dim, hidden_dim, out_dim, num_layers)
 @pytest.mark.parametrize("num_layers", [1, 2, 4])
 def test_has_expected_number_of_layers(num_layers):
     in_dim, hidden_dim, out_dim = 8, 16, 4
-    head = MLPPredictionHead(in_dim, hidden_dim, out_dim, num_layers)
+    head = FCNNPredictionHead(in_dim, hidden_dim, out_dim, num_layers)
 
     assert head.num_layers == num_layers
     assert len(head.layers) == num_layers
@@ -34,7 +34,7 @@ def test_has_expected_number_of_layers(num_layers):
 
 def test_layer_dimensions_match_spec():
     in_dim, hidden_dim, out_dim, num_layers = 10, 32, 4, 3
-    head = MLPPredictionHead(in_dim, hidden_dim, out_dim, num_layers)
+    head = FCNNPredictionHead(in_dim, hidden_dim, out_dim, num_layers)
 
     # layer0: in_dim -> hidden_dim
     assert head.layers[0].in_features == in_dim

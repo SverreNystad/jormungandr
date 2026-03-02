@@ -18,11 +18,21 @@ def test_fafnir_forward_pass(batch_size, channels, height, width, num_queries):
 
     fafnir = Fafnir(backbone=backbone, num_queries=num_queries)
 
-    outputs = fafnir.forward(pixel_values)
+    class_labels, bbox_coordinates = fafnir.forward(pixel_values)
 
-    assert outputs.shape[0] == batch_size, (
-        f"Expected batch size {batch_size}, got {outputs.shape[0]}"
+    assert class_labels.shape[0] == batch_size, (
+        f"Expected batch size {batch_size}, got {class_labels.shape[0]}"
     )
-    assert outputs.shape[1] == num_queries, (
-        f"Expected number of queries {num_queries}, got {outputs.shape[1]}"
+    assert class_labels.shape[1] == num_queries, (
+        f"Expected number of queries {num_queries}, got {class_labels.shape[1]}"
+    )
+
+    assert bbox_coordinates.shape[0] == batch_size, (
+        f"Expected batch size {batch_size}, got {bbox_coordinates.shape[0]}"
+    )
+    assert bbox_coordinates.shape[1] == num_queries, (
+        f"Expected number of queries {num_queries}, got {bbox_coordinates.shape[1]}"
+    )
+    assert bbox_coordinates.shape[2] == 4, (
+        f"Expected bbox coordinates to have 4 values (center_x, center_y, width, height), got {bbox_coordinates.shape[2]}"
     )
