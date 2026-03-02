@@ -254,3 +254,6 @@ lerna-debug.log
 Thumbs.db
 
 .vscode/
+
+
+slurm_outouts/
