@@ -1,9 +1,56 @@
-from torch import nn
+import torch
+from torch import nn, Tensor
+from transformers import DetrForObjectDetection
 
 
 class DETRDecoder(nn.Module):
-    def __init__(self, num_queries: int = 16, hidden_dim: int = 16):
+    def __init__(
+        self,
+        num_queries: int = 100,
+        hidden_dim: int = 16,
+        model_name: str = "facebook/detr-resnet-50",
+    ):
         super(DETRDecoder, self).__init__()
         self.num_queries = num_queries
-        self.query_embed = nn.Embedding(num_queries, hidden_dim)
+        self.query_position_embeddings = nn.Embedding(num_queries, hidden_dim)
+
         # Additional layers can be added here
+
+        self.decoder = DetrForObjectDetection.from_pretrained(model_name).model.decoder
+
+    def forward(
+        self,
+        encoder_output: Tensor,
+        position_embedding: Tensor,
+        encoder_mask_flattened: Tensor | None = None,
+        decoder_inputs_embeds: Tensor | None = None,
+        decoder_attention_mask: torch.FloatTensor | None = None,
+    ) -> Tensor:
+        """
+        Args:
+            encoder_output: Tensor of shape (batch_size, sequence_length, hidden_dim)
+            position_embedding: Tensor of shape (batch_size, sequence_length, hidden_dim)
+            decoder_inputs_embeds: Optional tensor of shape (batch_size, num_queries, hidden_dim)
+        Returns:
+            Tensor of shape (batch_size, num_queries, hidden_dim)
+        """
+
+        batch_size = encoder_output.shape[0]
+        object_queries_position_embeddings = (
+            self.query_position_embeddings.weight.unsqueeze(0).repeat(batch_size, 1, 1)
+        )
+        # Use decoder_inputs_embeds as queries if provided, otherwise initialize with zeros
+        if decoder_inputs_embeds is not None:
+            queries = decoder_inputs_embeds
+        else:
+            queries = torch.zeros_like(object_queries_position_embeddings)
+
+        decoder_output = self.decoder(
+            inputs_embeds=queries,
+            encoder_hidden_states=encoder_output,
+            spatial_position_embeddings=position_embedding,
+            object_queries_position_embeddings=object_queries_position_embeddings,
+            attention_mask=decoder_attention_mask,
+            encoder_attention_mask=encoder_mask_flattened,
+        )[0]
+        return decoder_output

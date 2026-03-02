@@ -2,6 +2,7 @@ from torch import nn, Tensor
 import torch
 
 from jormungandr.encoder import MambaEncoder
+from jormungandr.detr_decoder import DETRDecoder
 from jormungandr.backbone import Backbone
 from jormungandr.embedder import Embedder, DetrSinePositionEmbedding
 
@@ -15,7 +16,7 @@ class Fafnir(nn.Module):
         num_encoder_layers: int = 6,
         num_decoder_layers: int = 6,
         num_classes: int = 10,
-        num_queries: int = 16,
+        num_queries: int = 100,
         variant="fafnir-b",
         device: torch.device | str = "cuda",
     ):
@@ -40,7 +41,15 @@ class Fafnir(nn.Module):
             model_dimension=model_dimension, num_layers=num_encoder_layers
         ).to(device)
 
-    def forward(self, pixel_values: Tensor) -> Tensor:
+        # TODO: Find if hidden dim is model dimension or something else
+        self.decoder = DETRDecoder(
+            num_queries=num_queries, hidden_dim=model_dimension
+        ).to(device)
+
+    def forward(
+        self,
+        pixel_values: Tensor,
+    ) -> Tensor:
         pixel_values = pixel_values.to(self.device)
         # Backbone
         feature_maps, mask = self.backbone.forward(pixel_values)
@@ -61,9 +70,16 @@ class Fafnir(nn.Module):
         print(f"Flattened feature maps shape: {flattened_feature_maps.shape}")
         print(f"Flattened mask shape: {flattened_mask.shape}")
 
-        features = self.mamba_encoder.forward(
+        encoder_outputs = self.mamba_encoder.forward(
             flattened_feature_maps, position_embedding=position_embedding
         )
 
+        print(f"Encoder outputs shape: {encoder_outputs.shape}")
         # Decoder
-        return features
+        decoder_output = self.decoder.forward(
+            encoder_output=encoder_outputs,
+            position_embedding=position_embedding,
+            encoder_mask_flattened=flattened_mask,
+        )
+        print(f"Decoder output shape: {decoder_output.shape}")
+        return decoder_output
