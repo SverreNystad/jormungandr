@@ -22,11 +22,6 @@ echo "The job was run on these nodes: $SLURM_JOB_NODELIST"
 module purge
 module load Anaconda3/2024.02-1
 
-pip install uv --user
-
-uv sync
-
-uv run scripts/download_dataset.py
-# Run the Python script
+./scripts/download.bash
 
 echo "Job finished"
