@@ -79,7 +79,13 @@ def train(
     return model
 
 
-def train_one_epoch(model, dataloader, optimizer, criterion, device):
+def train_one_epoch(
+    model: nn.Module,
+    dataloader: DataLoader,
+    optimizer: optim.Optimizer,
+    criterion: nn.Module | Callable,
+    device: torch.device | str,
+):
     running_loss = 0.0
     last_loss = 0.0
 
