@@ -18,7 +18,10 @@ download "http://images.cocodataset.org/zips/train2017.zip" "./data/train2017.zi
 download "http://images.cocodataset.org/zips/val2017.zip"   "./data/val2017.zip"
 download "http://images.cocodataset.org/zips/test2017.zip"  "./data/test2017.zip"
 
+download "http://images.cocodataset.org/annotations/annotations_trainval2017.zip" "./data/annotations_trainval2017.zip"
+
 
 unzip -q ./data/train2017.zip -d ./data
 unzip -q ./data/val2017.zip -d ./data
 unzip -q ./data/test2017.zip -d ./data
+unzip -q ./data/annotations_trainval2017.zip -d ./data
