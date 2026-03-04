@@ -42,7 +42,6 @@ timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 def train(
     config=CONFIG,
 ):
-
     model: nn.Module = Fafnir(encoder_type=config.fafnir.encoder.type).to("cuda")
 
     wandb.watch(model, log="all", log_freq=100)

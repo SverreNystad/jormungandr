@@ -16,10 +16,4 @@ if __name__ == "__main__":
 
     config = load_config("config.yaml")
 
-    train(
-        model=config.model,
-        training_loader=config.data.training_loader,
-        validation_loader=config.data.validation_loader,
-        criterion=config.trainer.loss,
-        optimizer=config.trainer.optimizer,
-    )
+    train(config)
