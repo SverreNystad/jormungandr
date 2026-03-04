@@ -26,8 +26,10 @@ import wandb
 import torch
 from torch.utils.data import DataLoader
 from torch import nn, optim
+from torch.optim import AdamW, Optimizer
 from datetime import datetime
-from jormungandr.config.configuration import load_config
+
+from jormungandr.config.configuration import Config, load_config
 from jormungandr.dataset import create_dataloaders
 from jormungandr.fafnir import Fafnir
 from jormungandr.training.criterion import build_criterion
@@ -51,7 +53,8 @@ def train(
 
     EPOCHS = config.trainer.epochs
     criterion = build_criterion(config.trainer.loss.name)
-    optimizer = build_optimizer(config.trainer.optimizer)
+    # optimizer = build_optimizer(config.trainer.optimizer)
+    optimizer = AdamW(model.parameters(), lr=config.trainer.learning_rate)
 
     best_val_loss = float("inf")
     for epoch in trange(EPOCHS, desc="Epochs", unit="epoch"):
@@ -94,26 +97,38 @@ def train(
 
 
 def train_one_epoch(
-    model: nn.Module,
+    model: Fafnir,
     dataloader: DataLoader,
     optimizer: optim.Optimizer,
     criterion: nn.Module | Callable,
     device: torch.device | str,
+    config: Config = CONFIG,
 ):
     running_loss = 0.0
     last_loss = 0.0
 
     for i, data in enumerate(dataloader):
-        inputs, labels = data
-        inputs, labels = inputs.to(device), labels.to(device)
+        pixel_values, pixel_mask, labels = (
+            data["pixel_values"],
+            data["pixel_mask"],
+            data["labels"],
+        )
+        pixel_values = pixel_values.to(device)
+        pixel_mask = pixel_mask.to(device)
+        labels = [{k: v.to(device) for k, v in label.items()} for label in labels]
 
         # Zero the parameter gradients
         optimizer.zero_grad()
 
         # Forward pass
-        outputs = model(inputs)
-        loss = criterion(outputs, labels)
-
+        class_labels, bbox_coordinates = model.forward(pixel_values)
+        loss = criterion(
+            logits=class_labels,
+            labels=labels,
+            device=device,
+            pred_boxes=bbox_coordinates,
+            config=CONFIG.trainer.loss,
+        )
         # Backward pass and optimize
         loss.backward()
         optimizer.step()
