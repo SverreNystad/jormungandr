@@ -14,16 +14,19 @@ from transformers.loss.loss_for_object_detection import (
     ForObjectDetectionLoss as GIoULoss,
 )
 
+from jormungandr.config.configuration import LossConfig
+
 detr_config = DetrConfig.from_pretrained("facebook/detr-resnet-50")
 
+
 def CIoULoss(
-    logits,
-    labels,
-    device,
-    pred_boxes,
-    config,
-    outputs_class=None,
-    outputs_coord=None,
+    logits: torch.Tensor,
+    labels: torch.Tensor,
+    device: torch.device,
+    pred_boxes: torch.Tensor,
+    config: LossConfig,
+    outputs_class: torch.Tensor | None = None,
+    outputs_coord: torch.Tensor | None = None,
     **kwargs,
 ):
     # First: create the matcher
@@ -46,7 +49,7 @@ def CIoULoss(
     auxiliary_outputs = None
     outputs_loss["logits"] = logits
     outputs_loss["pred_boxes"] = pred_boxes
-    if config.auxiliary_loss:
+    if detr_config.auxiliary_loss:
         auxiliary_outputs = _set_aux_loss(outputs_class, outputs_coord)
         outputs_loss["auxiliary_outputs"] = auxiliary_outputs
 

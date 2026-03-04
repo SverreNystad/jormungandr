@@ -122,7 +122,7 @@ def train_one_epoch(
 
         # Forward pass
         class_labels, bbox_coordinates = model.forward(pixel_values)
-        loss = criterion(
+        loss, loss_dict, auxiliary_outputs = criterion(
             logits=class_labels,
             labels=labels,
             device=device,
