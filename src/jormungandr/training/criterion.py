@@ -3,6 +3,7 @@ import torch
 from torch import nn
 from torchvision.ops import complete_box_iou
 from scipy.optimize import linear_sum_assignment
+from transformers import DetrConfig
 from transformers.image_transforms import center_to_corners_format
 from transformers.loss.loss_for_object_detection import (
     ImageLoss,
@@ -13,6 +14,7 @@ from transformers.loss.loss_for_object_detection import (
     ForObjectDetectionLoss as GIoULoss,
 )
 
+detr_config = DetrConfig.from_pretrained("facebook/detr-resnet-50")
 
 def CIoULoss(
     logits,
@@ -34,8 +36,8 @@ def CIoULoss(
     losses = ["labels", "boxes", "cardinality"]
     criterion = ImageLoss(
         matcher=matcher,
-        num_classes=config.num_labels,
-        eos_coef=config.eos_coefficient,
+        num_classes=detr_config.num_labels,
+        eos_coef=detr_config.eos_coefficient,
         losses=losses,
     )
     criterion.to(device)
@@ -50,11 +52,11 @@ def CIoULoss(
 
     loss_dict = criterion(outputs_loss, labels)
     # Fourth: compute total loss, as a weighted sum of the various losses
-    weight_dict = {"loss_ce": 1, "loss_bbox": config.bbox_loss_coefficient}
-    weight_dict["loss_giou"] = config.giou_loss_coefficient
-    if config.auxiliary_loss:
+    weight_dict = {"loss_ce": 1, "loss_bbox": detr_config.bbox_loss_coefficient}
+    weight_dict["loss_giou"] = detr_config.giou_loss_coefficient
+    if detr_config.auxiliary_loss:
         aux_weight_dict = {}
-        for i in range(config.decoder_layers - 1):
+        for i in range(detr_config.decoder_layers - 1):
             aux_weight_dict.update({k + f"_{i}": v for k, v in weight_dict.items()})
         weight_dict.update(aux_weight_dict)
     loss = sum(loss_dict[k] * weight_dict[k] for k in loss_dict if k in weight_dict)
