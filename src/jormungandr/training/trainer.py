@@ -111,7 +111,6 @@ def train_one_epoch(
     model.train(True)
 
     running_loss = 0.0
-    last_loss = 0.0
 
     for i, data in tqdm(
         enumerate(dataloader), desc="Batches", unit="batch", leave=False
@@ -135,29 +134,24 @@ def train_one_epoch(
             labels=labels,
             device=device,
             pred_boxes=bbox_coordinates,
-            config=CONFIG.trainer.loss,
+            config=config.trainer.loss,
         )
         # Backward pass and optimize
         loss.backward()
         clip_grad_norm_(model.parameters(), max_norm=1.0)
         optimizer.step()
 
+        batch_loss = loss.item()
+        running_loss += batch_loss
         wandb.log(
             {
-                "train/batch_loss": loss.item(),
+                "train/batch_loss": batch_loss,
                 **{f"train/loss/{k}": v for k, v in loss_dict.items()},
                 # **{f"batch/aux/{k}": v for k, v in auxiliary_outputs.items()},
             }
         )
-
-        # Gather data and report
-        running_loss += loss.item()
-        if i % 1000 == 999:
-            last_loss = running_loss / 1000  # loss per batch
-            print(f"Batch {i + 1} loss: {last_loss:.3f}")
-            running_loss = 0.0
-
-    return last_loss
+    average_loss = running_loss / (i + 1)
+    return average_loss
 
 
 # Disable gradient computation and reduce memory consumption.
