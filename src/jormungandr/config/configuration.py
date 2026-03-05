@@ -36,6 +36,26 @@ class LossConfig(BaseModel):
         description="Relative weight of the giou loss of the bounding box in the matching cost",
     )
 
+    num_labels: int = Field(
+        default=91, description="Number of class labels (including background)"
+    )
+    eos_coefficient: float = Field(
+        default=0.1,
+        description="Relative weight of the no-object class in the classification cost",
+    )
+    auxiliary_loss: bool = Field(
+        default=False,
+        description="Whether to compute auxiliary losses from intermediate layers of the model",
+    )
+    bbox_loss_coefficient: float = Field(
+        default=5.0,
+        description="Coefficient for the bounding box L1 loss in the total loss calculation",
+    )
+    giou_loss_coefficient: float = Field(
+        default=2.0,
+        description="Coefficient for the GIoU loss in the total loss calculation",
+    )
+
 
 class TrainerConfig(BaseModel):
     epochs: int = Field(default=5, description="Number of training epochs")
