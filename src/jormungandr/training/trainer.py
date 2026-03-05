@@ -135,6 +135,14 @@ def train_one_epoch(
         loss.backward()
         optimizer.step()
 
+        wandb.log(
+            {
+                "batch/batch_loss": loss.item(),
+                **{f"batch/loss/{k}": v for k, v in loss_dict.items()},
+                **{f"batch/aux/{k}": v for k, v in auxiliary_outputs.items()},
+            }
+        )
+
         # Gather data and report
         running_loss += loss.item()
         if i % 1000 == 999:
