@@ -18,6 +18,7 @@ from transformers.loss.loss_for_object_detection import (
         torch.tensor([[0, 0, 0, 0]]),
         # Bounding box completely outside the image
         torch.tensor([[0.5, 0.5, -0.001, -0.001]]),
+        torch.tensor([[0, 0, 1.1, 1.1]]),
         # Bounding box completely outside the image
         torch.tensor([[-1, -1, 0.1, 0.1]]),
         # Bounding box completely inside the image
