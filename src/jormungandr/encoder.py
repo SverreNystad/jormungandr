@@ -60,6 +60,9 @@ class DETREncoder(nn.Module, Encoder):
         super(DETREncoder, self).__init__()
         self.encoder = DetrForObjectDetection.from_pretrained(model_name).model.encoder
 
+        for layer in self.encoder.layers:
+            layer.training = True
+
     def forward(self, x: Tensor, position_embedding: Tensor | None = None) -> Tensor:
         encoder_outputs = self.encoder.forward(
             x, spatial_position_embeddings=position_embedding
