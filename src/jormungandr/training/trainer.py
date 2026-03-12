@@ -7,6 +7,10 @@ It shall be able to train both the Fafnir and Jormungandr models
 It shall use:
 * Torch
 * Torchvision for data loading and augmentation
+* Freeze backbone
+* Learning rate schedular
+* Different LR for encoder and decoder
+* MultiGPU support Accelerate
 * Wandb for logging and visualization
     - Log epoch-wise training and validation loss
     - Log validation metrics
@@ -45,8 +49,8 @@ timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 def train(
     config=CONFIG,
 ):
-    model: nn.Module = Fafnir(encoder_type=config.fafnir.encoder.type).to("cuda")
-
+    device = "cuda"
+    model = Fafnir(encoder_type=config.fafnir.encoder.type).to(device)
     wandb.watch(model, log="all", log_freq=100)
     training_loader, validation_loader = create_dataloaders(
         batch_size=config.trainer.batch_size
@@ -59,27 +63,26 @@ def train(
 
     best_val_loss = float("inf")
     for epoch in trange(EPOCHS, desc="Epochs", unit="epoch"):
-        model.train(True)
-        avg_loss = train_one_epoch(
-            model, training_loader, optimizer, criterion, device="cuda"
+        average_training_loss = train_one_epoch(
+            model,
+            training_loader,
+            optimizer,
+            criterion,
+            device=device,
+        )
+        average_validation_loss = run_validation(
+            model,
+            validation_loader,
+            criterion,
+            device=device,
         )
 
-        running_val_loss = 0.0
-        # Set the model to evaluation mode, disabling dropout and using population
-        # statistics for batch normalization.
-        model.eval()
-
-        # Disable gradient computation and reduce memory consumption.
-        with torch.no_grad():
-            for i, vdata in enumerate(validation_loader):
-                validation_image, validation_labels = vdata
-                voutputs = model(validation_image)
-                val_loss = criterion(voutputs, validation_labels)
-                running_val_loss += val_loss
-
-        average_validation_loss = running_val_loss / (i + 1)
-        print(f"LOSS train {avg_loss:.3f} valid {average_validation_loss:.3f}")
-        wandb.log({"train_loss": avg_loss, "val_loss": average_validation_loss})
+        print(
+            f"LOSS train {average_training_loss:.3f} valid {average_validation_loss:.3f}"
+        )
+        wandb.log(
+            {"train_loss": average_training_loss, "val_loss": average_validation_loss}
+        )
 
         # Track best performance, and save the model's state
         if average_validation_loss < best_val_loss:
@@ -104,9 +107,10 @@ def train_one_epoch(
     criterion: nn.Module | Callable,
     device: torch.device | str,
     config: Config = CONFIG,
-):
+) -> float:
+    model.train(True)
+
     running_loss = 0.0
-    last_loss = 0.0
 
     for i, data in tqdm(
         enumerate(dataloader), desc="Batches", unit="batch", leave=False
@@ -130,7 +134,7 @@ def train_one_epoch(
             labels=labels,
             device=device,
             pred_boxes=bbox_coordinates,
-            config=CONFIG.trainer.loss,
+            config=config.trainer.loss,
         )
 
         if (bbox_coordinates < 0).any():
@@ -154,19 +158,60 @@ def train_one_epoch(
         clip_grad_norm_(model.parameters(), max_norm=1.0)
         optimizer.step()
 
+        batch_loss = loss.item()
+        running_loss += batch_loss
         wandb.log(
             {
-                "batch/batch_loss": loss.item(),
-                **{f"batch/loss/{k}": v for k, v in loss_dict.items()},
+                "train/batch_loss": batch_loss,
+                **{f"train/loss/{k}": v for k, v in loss_dict.items()},
                 # **{f"batch/aux/{k}": v for k, v in auxiliary_outputs.items()},
             }
         )
+    average_loss = running_loss / (i + 1)
+    return average_loss
 
-        # Gather data and report
-        running_loss += loss.item()
-        if i % 1000 == 999:
-            last_loss = running_loss / 1000  # loss per batch
-            print(f"Batch {i + 1} loss: {last_loss:.3f}")
-            running_loss = 0.0
 
-    return last_loss
+# Disable gradient computation and reduce memory consumption.
+@torch.no_grad()
+def run_validation(
+    model: Fafnir,
+    validation_loader: DataLoader,
+    criterion: nn.Module | Callable,
+    device: torch.device | str,
+    config: Config = CONFIG,
+) -> float:
+    running_val_loss = 0.0
+    # Set the model to evaluation mode, disabling dropout and using population
+    # statistics for batch normalization.
+    model.eval()
+
+    for i, batch in enumerate(validation_loader):
+        pixel_values, pixel_mask, labels = (
+            batch["pixel_values"],
+            batch["pixel_mask"],
+            batch["labels"],
+        )
+        pixel_values = pixel_values.to(device)
+        pixel_mask = pixel_mask.to(device)
+        labels = [{k: v.to(device) for k, v in label.items()} for label in labels]
+
+        class_labels, bbox_coordinates = model.forward(pixel_values)
+
+        val_loss, loss_dict, auxiliary_outputs = criterion(
+            logits=class_labels,
+            labels=labels,
+            device=device,
+            pred_boxes=bbox_coordinates,
+            config=config.trainer.loss,
+        )
+        running_val_loss += val_loss
+
+        wandb.log(
+            {
+                "val/batch_loss": val_loss.item(),
+                **{f"val/loss/{k}": v for k, v in loss_dict.items()},
+                # **{f"batch/aux/{k}": v for k, v in auxiliary_outputs.items()},
+            }
+        )
+    average_val_loss = running_val_loss / (i + 1)
+    return average_val_loss.item()
