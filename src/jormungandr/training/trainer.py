@@ -24,8 +24,6 @@ It shall use:
 *
 """
 
-from time import time
-
 from tqdm import tqdm, trange
 from typing import Callable
 import wandb
@@ -92,9 +90,6 @@ def train(
             device=device,
         )
 
-        print(
-            f"LOSS train {average_training_loss:.3f} valid {average_validation_loss:.3f}"
-        )
         wandb.log(
             {
                 "train_loss": average_training_loss,
@@ -107,11 +102,12 @@ def train(
         # Track best performance, and save the model's state
         if average_validation_loss < best_val_loss:
             best_val_loss = average_validation_loss
-            model_path = f"{MODELS_PATH}model_{best_val_loss:.3f}_{epoch}"
+            artifact_name = f"model_{timestamp}_{best_val_loss:.3f}_{epoch}"
+            model_path = f"{MODELS_PATH}{artifact_name}"
             torch.save(model.state_dict(), model_path)
 
             model_artifact = wandb.Artifact(
-                model_path,
+                artifact_name,
                 type="model",
             )
             model_artifact.add_file(model_path)
@@ -191,7 +187,10 @@ def run_validation(
     # Set the model to evaluation mode, disabling dropout and using population
     # statistics for batch normalization.
     model.eval()
-    times = []
+
+    timings = []
+    starter = torch.cuda.Event(enable_timing=True)
+    ender = torch.cuda.Event(enable_timing=True)
 
     for i, batch in enumerate(validation_loader):
         pixel_values, pixel_mask, labels = (
@@ -206,10 +205,15 @@ def run_validation(
             for label in labels
         ]
 
-        start_time = time()
-        class_labels, bbox_coordinates = model.forward(pixel_values)
-        end_time = time()
-        times.append(end_time - start_time)
+        if torch.cuda.is_available():
+            torch.cuda.synchronize()
+
+        starter.record()
+        class_labels, bbox_coordinates = model(pixel_values)
+        ender.record()
+
+        torch.cuda.synchronize()
+        timings.append(starter.elapsed_time(ender))
 
         val_loss, loss_dict, auxiliary_outputs = criterion(
             logits=class_labels,
@@ -228,6 +232,6 @@ def run_validation(
             }
         )
 
-    average_time = sum(times) / len(times)
+    average_time = sum(timings) / len(timings)
     average_val_loss = running_val_loss / (i + 1)
     return average_val_loss.item(), average_time
