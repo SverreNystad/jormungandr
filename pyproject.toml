@@ -24,6 +24,7 @@ dependencies = [
     "timm>=1.0.25",
     "datasets>=4.6.1",
     "scipy>=1.17.1",
+    "supervision>=0.27.0.post1",
 ]
 
 [tool.uv]
