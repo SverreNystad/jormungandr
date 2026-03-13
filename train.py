@@ -1,5 +1,6 @@
 import wandb
-
+from torch.profiler import profile, ProfilerActivity
+from codecarbon import track_emissions
 from jormungandr.config.configuration import (
     load_config,
     WANDB_API_KEY,
@@ -10,7 +11,8 @@ from jormungandr.training.trainer import train
 from jormungandr.utils.seed import seed_everything
 
 
-if __name__ == "__main__":
+@track_emissions(country_iso_code="NOR", project_name="fafnir_training")
+def main():
     config = load_config("config.yaml")
     seed_everything(config.trainer.seed)
 
@@ -23,3 +25,12 @@ if __name__ == "__main__":
     )
 
     train(config)
+
+
+if __name__ == "__main__":
+    # with profile(
+    #     activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
+    #     record_shapes=True,
+    #     profile_memory=True,
+    # ) as prof:
+    main()
