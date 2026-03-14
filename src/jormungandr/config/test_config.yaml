@@ -23,7 +23,7 @@ fafnir:
   input_size: 224
   num_classes: 92
   encoder:
-    type: "detr"
+    encoder_type: "detr"
     num_layers: 12
   decoder:
     freeze_decoder: false

@@ -9,7 +9,6 @@ from jormungandr.embedder import Embedder, DetrSinePositionEmbedding
 from jormungandr.config.configuration import FafnirConfig, DecoderConfig, EncoderConfig
 
 
-
 class Fafnir(nn.Module):
     def __init__(
         self,
@@ -41,7 +40,7 @@ class Fafnir(nn.Module):
 
         # Encoder
         self.encoder = None
-        match config.encoder.type.lower():
+        match config.encoder.encoder_type.lower():
             case "mamba":
                 self.encoder = MambaEncoder(
                     model_dimension=model_dimension, num_layers=num_encoder_layers
@@ -56,9 +55,7 @@ class Fafnir(nn.Module):
             decoder_config=config.decoder,
         ).to(device)
 
-        self.output_head = FCNNPredictionHead().to(
-            device
-        )
+        self.output_head = FCNNPredictionHead().to(device)
 
     def forward(
         self,

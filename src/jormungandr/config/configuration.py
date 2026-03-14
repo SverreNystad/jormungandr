@@ -82,6 +82,7 @@ class TrainerConfig(BaseModel):
         default_factory=LossConfig, description="Configuration for the loss function"
     )
 
+
 class DecoderConfig(BaseModel):
     freeze_decoder: bool = Field(
         default=False, description="Whether to freeze the decoder during training"
@@ -94,11 +95,13 @@ class DecoderConfig(BaseModel):
         default=None, description="Number of object queries for the decoder"
     )
     hidden_dim: int = Field(
-        default=256, description="Hidden dimension size for the decoder's query position embeddings"
+        default=256,
+        description="Hidden dimension size for the decoder's query position embeddings",
     )
 
+
 class EncoderConfig(BaseModel):
-    type: str = Field(
+    encoder_type: str = Field(
         default="Mamba",
         description="Type of encoder to use (e.g., 'Mamba', 'Transformer')",
     )
