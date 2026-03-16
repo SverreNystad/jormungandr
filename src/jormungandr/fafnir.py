@@ -43,7 +43,7 @@ class Fafnir(nn.Module):
         match config.encoder.encoder_type.lower():
             case "mamba":
                 self.encoder = MambaEncoder(
-                    model_dimension=model_dimension, num_layers=num_encoder_layers
+                    model_dimension=model_dimension, num_layers=config.encoder.num_layers
                 ).to(device)
             case "detr":
                 self.encoder = DETREncoder().to(device)
