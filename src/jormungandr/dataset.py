@@ -92,10 +92,8 @@ def create_dataloaders(
         generator=train_generator,
         num_workers=len(os.sched_getaffinity(0)),
         pin_memory=True,
-        persistent_workers=True,  # keeps workers alive between epochs
         prefetch_factor=2,  # tune upward if needed
     )
-    print(f"Num workers: {len(os.sched_getaffinity(0))}")
     val_loader = DataLoader(
         torch_val_ds,
         batch_size=batch_size,
@@ -105,7 +103,5 @@ def create_dataloaders(
         generator=val_generator,
         num_workers=len(os.sched_getaffinity(0)),
         pin_memory=True,
-        persistent_workers=True,
-        prefetch_factor=2,
     )
     return train_loader, val_loader
