@@ -46,10 +46,10 @@ timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
 
 def train(
-    config=CONFIG,
+    config: Config,
 ):
     device = "cuda"
-    model = Fafnir(config=config).to(device)
+    model = Fafnir(config=config.fafnir).to(device)
     wandb.watch(model, log="all", log_freq=100)
     training_loader, validation_loader = create_dataloaders(
         batch_size=config.trainer.batch_size,
@@ -124,7 +124,7 @@ def train_one_epoch(
     optimizer: optim.Optimizer,
     criterion: nn.Module | Callable,
     device: torch.device | str,
-    config: Config = CONFIG,
+    config: Config,
 ) -> float:
     model.train(True)
 
