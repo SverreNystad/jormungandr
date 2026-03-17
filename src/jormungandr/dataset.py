@@ -75,6 +75,7 @@ def create_dataloaders(
     seed: int = 42,
     shuffle: bool = True,
     collate_fn: Callable = _collate_fn,
+    subset_size: int | None = None,
 ) -> tuple[DataLoader, DataLoader]:
     ds = load_dataset(dataset_name, cache_dir=cache_dir)
 
@@ -82,6 +83,14 @@ def create_dataloaders(
     torch_val_ds = ds["val"].with_format("torch")
     train_generator = build_torch_generator(seed)
     val_generator = build_torch_generator(seed + 1)
+
+    if subset_size is not None:
+        torch_train_ds = torch_train_ds.shuffle(seed=seed, generator=train_generator).select(
+            range(subset_size)
+        )
+        torch_val_ds = torch_val_ds.shuffle(seed=seed + 1, generator=val_generator).select(
+            range(subset_size)
+        )
 
     train_loader = DataLoader(
         torch_train_ds,

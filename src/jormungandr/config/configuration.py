@@ -63,6 +63,10 @@ class TrainerConfig(BaseModel):
         default=16, description="Batch size for training and validation"
     )
     seed: int = Field(default=42, description="Random seed for reproducible runs")
+    subset_size: int | None = Field(
+        default=None,
+        description="If set, limits the number of samples used for training and validation to this number (useful for quick testing)",
+    )
     encoder_learning_rate: float = Field(
         default=0.001, description="Learning rate for the encoder optimizer"
     )
