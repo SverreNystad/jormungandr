@@ -17,7 +17,7 @@ from jormungandr.utils.seed import seed_everything
     log_level="ERROR",
 )
 def main():
-    config = load_config("config.yaml")
+    config = load_config("detr.yaml")
     seed_everything(config.trainer.seed)
 
     wandb.login(key=WANDB_API_KEY)
