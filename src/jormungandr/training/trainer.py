@@ -216,7 +216,7 @@ def run_validation(
             torch.cuda.synchronize()
 
         starter.record()
-        class_labels, bbox_coordinates = model(pixel_values)
+        class_labels, bbox_coordinates = model(pixel_values, pixel_mask)
         ender.record()
 
         torch.cuda.synchronize()
@@ -269,3 +269,28 @@ def run_validation(
     average_time = sum(timings) / len(timings)
     average_val_loss = running_val_loss / (i + 1)
     return average_val_loss, average_time
+
+def validate(
+    config: Config
+) -> None:
+    device = "cuda"
+    model = Fafnir(config=config.fafnir).to(device)
+    training_loader, validation_loader = create_dataloaders(
+        batch_size=config.trainer.batch_size,
+        seed=config.trainer.seed,
+        subset_size=1000
+    )
+
+    criterion = build_criterion(config.trainer.loss.name)
+
+    average_validation_loss, average_validation_time = run_validation(
+        model,
+        validation_loader,
+        criterion,
+        device=device,
+        config=config,
+    )
+
+    print(f"Average validation loss: {average_validation_loss:.4f}")
+    print(f"Average validation time per batch: {average_validation_time:.2f} ms")
+
