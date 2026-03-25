@@ -57,9 +57,9 @@ class MambaEncoder(nn.Module, Encoder):
 
 
 class DETREncoder(nn.Module, Encoder):
-    def __init__(self, model_name: str = "facebook/detr-resnet-50", use_pre_trained: bool = True):
+    def __init__(self, model_name: str = "facebook/detr-resnet-50", use_pre_trained: bool = True, num_layers: int = 6):
         super(DETREncoder, self).__init__()
-        self.encoder = fetch_detr_model(model_name, is_pre_trained=use_pre_trained).model.encoder
+        self.encoder = fetch_detr_model(model_name, is_pre_trained=use_pre_trained, num_encoder_layers=num_layers).model.encoder
 
         for layer in self.encoder.layers:
             layer.training = True
