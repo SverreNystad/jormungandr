@@ -109,6 +109,7 @@ def log_validation_images(
     scores, pred_classes = probs[..., :-1].max(-1)  # [B, Q]
 
     wandb_images = []
+
     for b in range(min(num_images, len(labels))):
         # Crop padding: find actual image dimensions from pixel_mask
         actual_h = int(pixel_mask[b].any(dim=-1).sum().item())
@@ -127,6 +128,7 @@ def log_validation_images(
         # GT boxes: normalized cxcywh -> pixel xyxy scaled to actual (non-padded) dims
         gt_boxes_norm = labels[b]["boxes"].cpu()
         gt_classes = labels[b]["class_labels"].cpu()
+
         gt_xyxy = center_to_corners_format(gt_boxes_norm)
         gt_xyxy[:, [0, 2]] *= actual_w
         gt_xyxy[:, [1, 3]] *= actual_h
