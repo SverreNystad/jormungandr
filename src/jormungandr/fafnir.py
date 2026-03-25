@@ -60,10 +60,11 @@ class Fafnir(nn.Module):
     def forward(
         self,
         pixel_values: Tensor,
+        pixel_mask: Tensor | None = None,
     ) -> tuple[Tensor, Tensor]:
         pixel_values = pixel_values.to(self.device)
         # Backbone
-        feature_maps, mask = self.backbone.forward(pixel_values)
+        feature_maps, mask = self.backbone.forward(pixel_values, pixel_mask)
         # Encoder
         feature_map_shape = feature_maps.shape
         position_embedding = self.embedder.forward(
@@ -82,6 +83,7 @@ class Fafnir(nn.Module):
         encoder_outputs = self.encoder.forward(
             flattened_feature_maps,
             position_embedding=position_embedding,
+            pixel_mask=flattened_mask,
         )
 
         # Decoder

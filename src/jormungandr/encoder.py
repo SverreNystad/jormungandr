@@ -64,8 +64,8 @@ class DETREncoder(nn.Module, Encoder):
         for layer in self.encoder.layers:
             layer.training = True
 
-    def forward(self, x: Tensor, position_embedding: Tensor | None = None) -> Tensor:
+    def forward(self, x: Tensor, position_embedding: Tensor | None = None, pixel_mask: Tensor | None = None) -> Tensor:
         encoder_outputs = self.encoder.forward(
-            x, spatial_position_embeddings=position_embedding
+            x, spatial_position_embeddings=position_embedding, attention_mask=pixel_mask
         )
         return encoder_outputs.last_hidden_state
