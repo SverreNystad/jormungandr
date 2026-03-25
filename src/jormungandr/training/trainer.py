@@ -278,7 +278,6 @@ def validate(
     training_loader, validation_loader = create_dataloaders(
         batch_size=config.trainer.batch_size,
         seed=config.trainer.seed,
-        subset_size=1000
     )
 
     criterion = build_criterion(config.trainer.loss.name)
