@@ -8,8 +8,8 @@
 #SBATCH --gres=gpu:1
 #SBATCH --nodes=1
 #SBATCH --constraint="(a100)&(gpu80g)"
-#SBATCH --output=slurm_outputs/output_master.txt
-#SBATCH --error=slurm_outputs/output_master.err
+#SBATCH --output=slurm_outputs/output_experiment_2.txt
+#SBATCH --error=slurm_outputs/output_experiment_2.err
 
 
 WORKDIR=../${SLURM_SUBMIT_DIR}
@@ -28,7 +28,7 @@ pip install uv --user
 uv sync
 
 # Run the Python script
-uv run python train.py experiment_2.yaml
+uv run python train.py --config experiment_2.yaml
 
 
 echo "Job finished"
