@@ -3,13 +3,13 @@
 #SBATCH --job-name="validate"
 #SBATCH --time=01:00:00
 #SBATCH --partition=GPUQ
-#SBATCH --mem=80GB
+#SBATCH --mem=40GB
 #SBATCH --cpus-per-task=6
 #SBATCH --gres=gpu:1
 #SBATCH --nodes=1
 #SBATCH --constraint="(a100)&(gpu40g)"
-#SBATCH --output=slurm_outputs/output_master.txt
-#SBATCH --error=slurm_outputs/output_master.err
+#SBATCH --output=slurm_outputs/validate.txt
+#SBATCH --error=slurm_outputs/validate.err
 
 
 WORKDIR=../${SLURM_SUBMIT_DIR}
@@ -28,6 +28,6 @@ pip install uv --user
 uv sync
 
 # Run the Python script
-uv run python validate.py --detr_pretrained.yaml
+uv run python validate.py --experiment_1.yaml
 
 echo "Job finished"

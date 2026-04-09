@@ -1,7 +1,7 @@
 from torch import nn, Tensor
 import torch
 
-from jormungandr.encoder import MambaEncoder, DETREncoder
+from jormungandr.encoder import MambaEncoder, DETREncoder, MambaEncoderFFN
 from jormungandr.detr_decoder import DETRDecoder
 from jormungandr.output_head import FCNNPredictionHead
 from jormungandr.backbone import Backbone
@@ -49,6 +49,13 @@ class Fafnir(nn.Module):
                 ).to(device)
             case "detr":
                 self.encoder = DETREncoder(use_pre_trained=config.encoder.use_pre_trained, num_layers=config.encoder.num_layers).to(device)
+            case "mamba_ffn":
+                self.encoder = MambaEncoderFFN(
+                    model_dimension=model_dimension,
+                    num_layers=config.encoder.num_layers,
+                    dim_feedforward=config.encoder.dim_feedforward,
+                    dropout=config.encoder.dropout,
+                ).to(device)
             case _:
                 raise ValueError(f"Unsupported encoder type: {config.encoder.type}")
 
