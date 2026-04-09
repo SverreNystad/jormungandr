@@ -20,6 +20,7 @@ trainer:
     auxiliary_loss: false
     bbox_loss_coefficient: 5.0
     giou_loss_coefficient: 2.0
+    decoder_layers: 6
 
 fafnir:
   input_size: 224
@@ -30,5 +31,6 @@ fafnir:
   decoder:
     freeze_decoder: true
     epoch_to_unfreeze_decoder: 0
+    auxiliary_loss: true
   output_head:
     freeze_prediction_head: true
