@@ -1,15 +1,12 @@
-
 trainer:
-  epochs: 100
-  batch_size: 64
+  epochs: 1
+  batch_size: 16
   seed: 42
   encoder_learning_rate: 1e-4
   decoder_learning_rate: 1e-5
   output_head_learning_rate: 1e-5
   optimizer: "AdamW"
   log_interval: 10
-  num_log_images: 8
-  viz_score_threshold: 0.5
   loss:
     name: "giouloss" # Options: "giouloss", "ciouloss"
     class_cost: 1.0
@@ -17,7 +14,7 @@ trainer:
     giou_cost: 2.0  
     num_labels: 91
     eos_coefficient: 0.1
-    auxiliary_loss: false
+    auxiliary_loss: true
     bbox_loss_coefficient: 5.0
     giou_loss_coefficient: 2.0
     decoder_layers: 6
@@ -28,10 +25,8 @@ fafnir:
   encoder:
     encoder_type: "mamba"
     num_layers: 12
-    hidden_state_dim: 16 # Mamba-2 minimum; paper recommends 64-256 (vs Mamba-1 default of 16)
   decoder:
-    freeze_decoder: true
+    freeze_decoder: false
     epoch_to_unfreeze_decoder: 0
     auxiliary_loss: true
-  output_head:
-    freeze_prediction_head: true
+    

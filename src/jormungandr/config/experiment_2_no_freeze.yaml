@@ -28,10 +28,9 @@ fafnir:
   encoder:
     encoder_type: "mamba"
     num_layers: 12
-    hidden_state_dim: 16 # Mamba-2 minimum; paper recommends 64-256 (vs Mamba-1 default of 16)
   decoder:
-    freeze_decoder: true
+    freeze_decoder: false
     epoch_to_unfreeze_decoder: 0
     auxiliary_loss: true
   output_head:
-    freeze_prediction_head: true
+    freeze_prediction_head: false
