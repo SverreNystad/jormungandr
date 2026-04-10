@@ -12,7 +12,9 @@ from jormungandr.utils.model_fetcher import fetch_detr_model
 
 class Backbone(nn.Module):
     def __init__(
-        self, model_name: str = "facebook/detr-resnet-50", freeze_backbone: bool = True
+        self,
+        model_name: str = "facebook/detr-resnet-50",
+        freeze_backbone: bool = True,
     ):
         super(Backbone, self).__init__()
         self.backbone = fetch_detr_model(model_name).model.backbone

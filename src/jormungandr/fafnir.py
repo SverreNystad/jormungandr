@@ -29,6 +29,7 @@ class Fafnir(nn.Module):
         if backbone is None:
             self.backbone = Backbone(
                 model_name=config.detr_name,
+                freeze_backbone=config.backbone.freeze_backbone,
             ).to(device)
         self.embedder = (
             embedder

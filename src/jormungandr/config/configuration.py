@@ -82,6 +82,9 @@ class TrainerConfig(BaseModel):
         default=None,
         description="If set, limits the number of samples used for training and validation to this number (useful for quick testing)",
     )
+    backbone_learning_rate: float = Field(
+        default=5e-6, description="Learning rate for the backbone optimizer"
+    )
     encoder_learning_rate: float = Field(
         default=0.001, description="Learning rate for the encoder optimizer"
     )
@@ -112,15 +115,23 @@ class TrainerConfig(BaseModel):
         default=None,
         description="Configuration for the learning rate scheduler. If None, no scheduler is used.",
     )
+    epoch_to_unfreeze_decoder: int = Field(
+        default=0,
+        description="Epoch number at which to unfreeze the decoder if it is initially frozen",
+    )
+    epoch_to_unfreeze_backbone: int = Field(
+        default=0,
+        description="Epoch number at which to unfreeze the backbone if it is initially frozen",
+    )
+    epoch_to_unfreeze_output_head: int = Field(
+        default=0,
+        description="Epoch number at which to unfreeze the output head if it is initially frozen",
+    )
 
 
 class DecoderConfig(BaseModel):
     freeze_decoder: bool = Field(
         default=False, description="Whether to freeze the decoder during training"
-    )
-    epoch_to_unfreeze_decoder: int = Field(
-        default=0,
-        description="Epoch number at which to unfreeze the decoder if it is initially frozen",
     )
     num_queries: int = Field(
         default=None, description="Number of object queries for the decoder"
@@ -161,10 +172,24 @@ class OutputHeadConfig(BaseModel):
     )
 
 
+class BackboneConfig(BaseModel):
+    model_name: str = Field(
+        default="facebook/detr-resnet-50",
+        description="Name of the pre-trained DETR model to use for the backbone (e.g., 'facebook/detr-resnet-50')",
+    )
+    freeze_backbone: bool = Field(
+        default=False, description="Whether to freeze the backbone during training"
+    )
+
+
 class FafnirConfig(BaseModel):
     input_size: int = Field(default=512, description="Input size for the Fafnir model")
     num_classes: int = Field(
         default=80, description="Number of classes for object detection"
+    )
+    backbone: BackboneConfig = Field(
+        default_factory=BackboneConfig,
+        description="Configuration for the backbone used in Fafnir",
     )
     encoder: EncoderConfig = Field(
         default_factory=EncoderConfig,

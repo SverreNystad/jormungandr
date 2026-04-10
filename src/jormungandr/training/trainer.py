@@ -65,6 +65,11 @@ def train(
     optimizer = AdamW(
         [
             {
+                "name": "backbone",
+                "params": model.backbone.parameters(),
+                "lr": config.trainer.backbone_learning_rate,
+            },
+            {
                 "name": "encoder",
                 "params": model.encoder.parameters(),
                 "lr": config.trainer.encoder_learning_rate,
@@ -90,6 +95,7 @@ def train(
 
     best_val_loss = float("inf")
     for epoch in trange(config.trainer.epochs, desc="Epochs", unit="epoch"):
+        _handle_unfreezing(model, epoch, config)
         average_training_loss = train_one_epoch(
             model,
             training_loader,
@@ -142,6 +148,21 @@ def train(
             wandb.log_artifact(model_artifact)
 
     return model
+
+
+def _handle_unfreezing(model: Fafnir, epoch: int, config: Config) -> None:
+    if not config.fafnir.decoder.freeze_decoder:
+        if epoch == config.trainer.epoch_to_unfreeze_decoder:
+            for param in model.decoder.parameters():
+                param.requires_grad = True
+    if not config.fafnir.backbone.freeze_backbone:
+        if epoch == config.trainer.epoch_to_unfreeze_backbone:
+            for param in model.backbone.parameters():
+                param.requires_grad = True
+    if not config.fafnir.output_head.freeze_prediction_head:
+        if epoch == config.trainer.epoch_to_unfreeze_output_head:
+            for param in model.output_head.parameters():
+                param.requires_grad = True
 
 
 def train_one_epoch(
