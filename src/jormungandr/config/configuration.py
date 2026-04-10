@@ -178,6 +178,10 @@ class FafnirConfig(BaseModel):
         default_factory=OutputHeadConfig,
         description="Configuration for the output head used in Fafnir",
     )
+    detr_name: str = Field(
+        default="facebook/detr-resnet-50",
+        description="Name of the pre-trained DETR model to use for the encoder and decoder (e.g., 'facebook/detr-resnet-50')",
+    )
 
 
 class JormungandrConfig(BaseModel):

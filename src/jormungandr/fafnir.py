@@ -12,7 +12,7 @@ from jormungandr.config.configuration import FafnirConfig, DecoderConfig, Encode
 class Fafnir(nn.Module):
     def __init__(
         self,
-        backbone: Backbone = Backbone(),
+        backbone: Backbone | None = None,
         embedder: Embedder | None = None,
         model_dimension: int = 256,
         num_encoder_layers: int = 6,
@@ -26,15 +26,18 @@ class Fafnir(nn.Module):
         self.device = device
 
         # Backbone
-        self.backbone = backbone.to(device)
+        if backbone is None:
+            self.backbone = Backbone(
+                model_name=config.detr_name,
+            ).to(device)
         self.embedder = (
             embedder
             if embedder is not None
             else DetrSinePositionEmbedding(num_position_features=model_dimension // 2)
         )
-        assert (
-            self.embedder is not None
-        ), "Embedder should not be None after initialization"
+        assert self.embedder is not None, (
+            "Embedder should not be None after initialization"
+        )
 
         self.embedder = self.embedder.to(device)
 
@@ -49,18 +52,22 @@ class Fafnir(nn.Module):
                 ).to(device)
             case "detr":
                 self.encoder = DETREncoder(
+                    model_name=config.detr_name,
                     use_pre_trained=config.encoder.use_pre_trained,
                     num_layers=config.encoder.num_layers,
                 ).to(device)
             case _:
                 raise ValueError(f"Unsupported encoder type: {config.encoder.type}")
 
-        # TODO: Find if hidden dim is model dimension or something else
         self.decoder = DETRDecoder(
+            model_name=config.detr_name,
             decoder_config=config.decoder,
         ).to(device)
 
-        self.output_head = FCNNPredictionHead().to(device)
+        self.output_head = FCNNPredictionHead(
+            model_name=config.detr_name,
+            config=config.output_head,
+        ).to(device)
 
     def forward(
         self,
