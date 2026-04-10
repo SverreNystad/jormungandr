@@ -141,7 +141,7 @@ class DecoderConfig(BaseModel):
         description="Hidden dimension size for the decoder's query position embeddings",
     )
     auxiliary_loss: bool = Field(
-        default=False,
+        default=True,
         description="Whether the decoder is configured to compute auxiliary losses from intermediate layers",
     )
 

@@ -274,12 +274,18 @@ def run_validation(
         torch.cuda.synchronize()
         timings.append(starter.elapsed_time(ender))
 
+        output_class, output_coord = None, None
+        if config.trainer.loss.auxiliary_loss:
+            output_class, output_coord = model.output_head.forward(intermediate)
+
         val_loss, loss_dict, auxiliary_outputs = criterion(
             logits=class_labels,
             labels=labels,
             device=device,
             pred_boxes=bbox_coordinates,
             config=config.trainer.loss,
+            outputs_class=output_class,
+            outputs_coord=output_coord,
         )
 
         # Aggregate validation loss and metrics
