@@ -25,7 +25,7 @@ def main(config_file: str):
     wandb.init(
         project=WANDB_PROJECT,
         entity=WANDB_ENTITY,
-        mode="disabled",
+        # mode="disabled",
         config=config.model_dump(),
         settings=wandb.Settings(code_dir="./src"),
     )
