@@ -23,6 +23,8 @@ class Backbone(nn.Module):
         if self.freeze_backbone:
             for param in self.backbone.parameters():
                 param.requires_grad = False
+            for param in self.input_projection.parameters():
+                param.requires_grad = False
 
     def forward(
         self,
