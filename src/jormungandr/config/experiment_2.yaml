@@ -11,7 +11,7 @@ trainer:
   log_interval: 10
   num_log_images: 8
   viz_score_threshold: 0.5
-  epoch_to_unfreeze_backbone: 30
+  epoch_to_unfreeze_backbone: 300
   epoch_to_unfreeze_decoder: 30
   epoch_to_unfreeze_output_head: 30
   loss:
