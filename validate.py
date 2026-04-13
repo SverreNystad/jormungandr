@@ -17,7 +17,7 @@ from jormungandr.utils.seed import seed_everything
     project_name="fafnir_training",
     log_level="ERROR",
 )
-def main(config_file: str):
+def main(config_file: str, model_path: str | None) -> None:
     config = load_config(config_file)
     seed_everything(config.trainer.seed)
 
@@ -28,14 +28,14 @@ def main(config_file: str):
         # mode="disabled",
         config=config.model_dump(),
     )
-
-    validate(config)
+    model_path = "models/model_20260410_223240_9.349_31"
+    validate(config=config, model_path=model_path)
     wandb.finish()
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    experiment = "experiment_1.yaml"
+    experiment = "experiment_2.yaml"
     parser.add_argument(
         "config",
         nargs="?",
@@ -48,10 +48,16 @@ if __name__ == "__main__":
         default=None,
         help=f"Config file to load (e.g. {experiment})",
     )
+    parser.add_argument(
+        "--model-path",
+        dest="model_path",
+        default=None,
+        help="Path to the trained model checkpoint to validate",
+    )
     args = parser.parse_args()
     # with profile(
     #     activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
     #     record_shapes=True,
     #     profile_memory=True,
     # ) as prof:
-    main(args.config)
+    main(args.config_flag or args.config or experiment, args.model_path)
