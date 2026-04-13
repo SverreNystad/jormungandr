@@ -329,7 +329,7 @@ def run_validation(
     return average_val_loss, average_time
 
 
-def validate(config: Config, model_path: str | None) -> None:
+def validate(config: Config, model_path: str | None = None) -> None:
     device = "cuda"
 
     model = Fafnir(config=config.fafnir).to(device)
