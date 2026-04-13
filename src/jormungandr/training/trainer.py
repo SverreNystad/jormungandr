@@ -329,9 +329,14 @@ def run_validation(
     return average_val_loss, average_time
 
 
-def validate(config: Config) -> None:
+def validate(config: Config, model_path: str | None) -> None:
     device = "cuda"
+
     model = Fafnir(config=config.fafnir).to(device)
+
+    if model_path is not None:
+        model.load_state_dict(torch.load(model_path))
+
     training_loader, validation_loader = create_dataloaders(
         batch_size=config.trainer.batch_size,
         seed=config.trainer.seed,
