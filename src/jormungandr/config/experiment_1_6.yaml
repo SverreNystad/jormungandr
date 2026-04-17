@@ -15,7 +15,7 @@ trainer:
     giou_cost: 2.0  
     num_labels: 91
     eos_coefficient: 0.1
-    auxiliary_loss: true
+    auxiliary_loss: false
     bbox_loss_coefficient: 5.0
     giou_loss_coefficient: 2.0
 
@@ -27,6 +27,6 @@ fafnir:
     num_layers: 6
     use_pre_trained: true
   decoder:
-    auxiliary_loss: true
+    auxiliary_loss: false
     freeze_decoder: false
     epoch_to_unfreeze_decoder: 0
