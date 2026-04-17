@@ -120,7 +120,7 @@ class TrainerConfig(BaseModel):
         description="Epoch number at which to unfreeze the decoder if it is initially frozen",
     )
     epoch_to_unfreeze_backbone: int = Field(
-        default=0,
+        default=500,
         description="Epoch number at which to unfreeze the backbone if it is initially frozen",
     )
     epoch_to_unfreeze_output_head: int = Field(
