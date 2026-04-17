@@ -1,6 +1,6 @@
 
 trainer:
-  epochs: 3 00
+  epochs: 300
   batch_size: 64
   seed: 42
   encoder_learning_rate: 1e-4
