@@ -17,6 +17,7 @@
 - [Jormungandr: End-to-End Video Object Detection with Spatial-Temporal Mamba](#jormungandr-end-to-end-video-object-detection-with-spatial-temporal-mamba)
   - [Description](#description)
   - [Getting started](#getting-started)
+    - [Prerequisites](#prerequisites)
     - [Installation](#installation)
   - [Usage](#usage)
     - [Still Image Detection (Fafnir)](#still-image-detection-fafnir)
@@ -95,8 +96,8 @@ from jormungandr import Jormungandr
 
 device = torch.device("cuda")
 
-batch, frames, channels, height, width = 32, 8, 3, 224, 224
-x = torch.randn(batch, frames, channels, height, width).to(device)
+frames, channels, height, width = 32, 8, 3, 224, 224
+x = torch.randn(frames, channels, height, width).to(device)
 
 # Initialize model
 model = Jormungandr(variant="jormungandr-b", pretrained=True).to(device)
