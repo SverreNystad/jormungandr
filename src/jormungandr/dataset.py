@@ -315,8 +315,8 @@ class VODDataset(Dataset):
 
     def prepare_dataframe(self, seq_dir: str, gt_path: str):
         gt = pd.read_csv(gt_path, sep=",", header=None, names=self.columns)
-        filtered_gt = gt.query("confidence_score != 0")
-        filtered_gt["bbox"] = filtered_gt[
+        filtered_gt = gt.query("confidence_score != 0").copy()
+        filtered_gt.loc[:, "bbox"] = filtered_gt[
             ["bbox_left", "bbox_top", "bbox_width", "bbox_height"]
         ].values.tolist()
         filtered_gt = filtered_gt[["frame_number", "bbox", "class", "visibility"]]
