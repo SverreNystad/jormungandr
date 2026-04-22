@@ -374,7 +374,7 @@ def create_vod_dataloader(
     path: str = "../data/",
     dataset_name: str = "mot17",
     n_frames: int = 4,
-    batch_size: int = 4,
+    batch_size: int = 1,
     seed: int = 42,
     shuffle: bool = True,
     collate_fn: Callable = _collate_fn_vod,
