@@ -1,9 +1,9 @@
 #!/bin/sh
 #SBATCH --account=share-ie-idi
 #SBATCH --job-name="experiment-3_1"
-#24332234SBATCH --time=10-12:00:00
+#SBATCH --time=10-12:00:00
 #SBATCH --partition=GPUQ
-#SBATCH --mem=80GB
+#SBATCH --mem=100GB
 #SBATCH --cpus-per-task=6
 #SBATCH --gres=gpu:1
 #SBATCH --nodes=1
