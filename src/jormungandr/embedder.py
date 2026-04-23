@@ -125,3 +125,60 @@ class DetrLearnedPositionEmbedding(nn.Module, Embedder):
         # expected by the encoder
         pos = pos.flatten(2).permute(0, 2, 1)
         return pos
+
+
+class TemporalSinePositionEmbedding(nn.Module, Embedder):
+    def __init__(
+        self,
+        num_position_features: int = 128,
+        temperature: int = 10000,
+        normalize: bool = True,
+        scale: float | None = None,
+    ):
+        super().__init__()
+        self.num_position_features = num_position_features
+        self.temperature = temperature
+        self.normalize = normalize
+        self.scale = scale
+
+    def forward(
+        self,
+        shape: torch.Size,
+        device: torch.device | str,
+        dtype: torch.dtype,
+        delta_t: float = 1.0,
+    ) -> torch.Tensor:
+        """
+        Generate temporal sine position embeddings.
+        Args:
+            shape: The shape of the input tensor for which to compute the position embedding, expected to be (n_frames, sequence_length, model_dimension)
+            device: The device on which to create the position embedding
+            dtype: The dtype of the position embedding
+            delta_t: The time interval between frames, used to compute the sine and cosine values.
+            n_frames: The number of frames in the temporal sequence for which to compute the position embeddings.
+        Returns:
+        A position embedding tensor of shape (sequence_length * n_frames, num_position_features * 2) where num_position_features is the number of sine and cosine features for each temporal position. The first half of the features correspond to sine values and the second half correspond to cosine values.
+
+        PE(n_f, 2i) = sin(n_f * delta_t / (10000^(2i/d_model)))
+        PE(n_f, 2i+1) = cos(n_f * delta_t / (10000^(2i/d_model)))
+        """
+
+        n_frames, sequence_length, model_dimension = shape
+
+        # Create frame indices tensor of shape (n_frames,)
+        frame_indices = torch.arange(n_frames, device=device, dtype=dtype)
+        dim_t = torch.arange(
+            self.num_position_features, dtype=torch.int64, device=device
+        ).to(dtype)
+        dim_t = self.temperature ** (
+            2 * torch.div(dim_t, 2, rounding_mode="floor") / self.num_position_features
+        )
+       
+
+        # Compute the temporal position embeddings
+        pos = torch.empty((n_frames, 2), device=device, dtype=dtype)
+        pos[:, 0] = (frame_indices * delta_t / dim_t).sin()
+        pos[:, 1] = (frame_indices * delta_t / dim_t).cos()
+
+        pos = pos.unsqueeze(1)  # Add sequence length dimension
+        pos = pos.repeat(1, sequence_length, 1)  # Repeat for each position in the sequence
