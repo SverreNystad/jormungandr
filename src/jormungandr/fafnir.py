@@ -81,7 +81,7 @@ class Fafnir(nn.Module):
         self,
         pixel_values: Tensor,
         pixel_mask: Tensor | None = None,
-    ) -> tuple[Tensor, Tensor, Tensor]:
+    ) -> tuple[Tensor, Tensor, Tensor | None]:
         pixel_values = pixel_values.to(self.device)
         # Backbone
         feature_maps, mask = self.backbone.forward(pixel_values, pixel_mask)
