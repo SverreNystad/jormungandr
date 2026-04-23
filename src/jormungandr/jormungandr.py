@@ -8,8 +8,6 @@ from jormungandr.backbone import Backbone
 from jormungandr.embedder import Embedder, DetrSinePositionEmbedding
 from jormungandr.config.configuration import (
     JormungandrConfig,
-    DecoderConfig,
-    EncoderConfig,
 )
 
 
@@ -20,10 +18,6 @@ class Jormungandr(nn.Module):
 
     def __init__(
         self,
-        backbone: Backbone | None = None,
-        embedder: Embedder | None = None,
-        model_dimension: int = 256,
-        variant="Jormungandr-b",
         device: torch.device | str = "cuda",
         config: JormungandrConfig = JormungandrConfig(),
     ):
@@ -31,40 +25,36 @@ class Jormungandr(nn.Module):
         self.device = device
 
         # Backbone
-        if backbone is None:
-            self.backbone = Backbone(
-                model_name=config.detr_name,
-                freeze_backbone=config.backbone.freeze_backbone,
-            ).to(device)
-        self.embedder = (
-            embedder
-            if embedder is not None
-            else DetrSinePositionEmbedding(num_position_features=model_dimension // 2)
-        )
-        assert self.embedder is not None, (
-            "Embedder should not be None after initialization"
-        )
-
-        self.embedder = self.embedder.to(device)
+        self.backbone = Backbone(
+            model_name=config.detr_name,
+            freeze_backbone=config.backbone.freeze_backbone,
+        ).to(device)
+        self.embedder: Embedder = DetrSinePositionEmbedding(
+            num_position_features=config.model_dimension // 2,
+        ).to(device)
 
         # Encoders
         self.spatial_encoder = MambaEncoder(
-            model_dimension=model_dimension,
+            model_dimension=config.model_dimension,
             hidden_state_dim=config.spatial_encoder.hidden_state_dim,
             num_layers=config.spatial_encoder.num_layers,
         ).to(device)
         self.temporal_encoder = MambaEncoder(
-            model_dimension=model_dimension,
+            model_dimension=config.model_dimension,
             hidden_state_dim=config.temporal_encoder.hidden_state_dim,
             num_layers=config.temporal_encoder.num_layers,
         ).to(device)
 
         # Decoder + Output Head
         self.decoder = DETRDecoder(
+            model_name=config.detr_name,
             decoder_config=config.decoder,
         ).to(device)
 
-        self.output_head = FCNNPredictionHead().to(device)
+        self.output_head = FCNNPredictionHead(
+            model_name=config.detr_name,
+            config=config.output_head,
+        ).to(device)
 
     def forward(
         self,

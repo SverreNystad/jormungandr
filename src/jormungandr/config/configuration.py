@@ -241,6 +241,9 @@ class JormungandrConfig(BaseModel):
     input_size: int = Field(
         default=512, description="Input size for the Jormungandr model"
     )
+    model_dimension: int = Field(
+        default=256, description="Model/token embedding dimension (d_model)"
+    )
     num_classes: int = Field(
         default=80, description="Number of classes for object detection"
     )
