@@ -109,8 +109,8 @@ def train(
         steps_per_epoch=len(training_loader),
     )
 
-    best_val_loss = float("inf")
     best_val_ap = 0.0
+    artifact_name = f"{config.fafnir.encoder.encoder_type}_{config.trainer.loss.name}_{timestamp}"
     for epoch in trange(config.trainer.epochs, desc="Epochs", unit="epoch"):
         _handle_unfreezing(model, epoch, config)
         average_training_loss = train_one_epoch(
@@ -153,13 +153,16 @@ def train(
         if val_ap > best_val_ap:
             os.remove(artifact_name) if os.path.exists(artifact_name) else None
             best_val_ap = val_ap
-            artifact_name = f"model_{timestamp}_best_ap_{best_val_ap:.3f}_{epoch}"
             model_path = f"{MODELS_PATH}{artifact_name}"
             torch.save(model.state_dict(), model_path)
 
             model_artifact = wandb.Artifact(
                 artifact_name,
                 type="model",
+                metadata={
+                    "epoch": epoch,
+                    "val_ap": best_val_ap,
+                },
             )
             model_artifact.add_file(model_path)
             wandb.log_artifact(model_artifact)
