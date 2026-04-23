@@ -78,7 +78,7 @@ class Jormungandr(nn.Module):
         Returns:
             class_labels (Tensor): A tensor of shape (num_frames, num_queries, num_classes) containing the predicted class probabilities for each query.
             bbox_coordinates (Tensor): A tensor of shape (num_frames, num_queries, 4) containing the predicted bounding box coordinates for each query, where the last dimension represents (x_center, y_center, width, height) normalized to [0, 1].
-            intermediate_outputs (Tensor): A tensor containing intermediate outputs from the model.
+            intermediate_outputs (Tensor | None): A tensor containing intermediate outputs from the model.
         """
         if frames_pixel_values.ndim != 4 and frames_pixel_values.ndim != 5:
             raise ValueError(
@@ -127,7 +127,7 @@ class Jormungandr(nn.Module):
         )
 
         # Sequence to sequence prediction using the decoders with weight sharing
-        decoder_output = self.decoder.forward(
+        decoder_output, intermediate = self.decoder.forward(
             encoder_output=encoder_outputs,
             position_embedding=position_embedding,
             encoder_mask_flattened=flattened_mask,
@@ -135,4 +135,4 @@ class Jormungandr(nn.Module):
 
         # Detection Heads with weight sharing
         class_labels, bbox_coordinates = self.output_head.forward(decoder_output)
-        return class_labels, bbox_coordinates
+        return class_labels, bbox_coordinates, intermediate
