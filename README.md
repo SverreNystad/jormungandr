@@ -8,7 +8,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Project Version](https://img.shields.io/badge/version-0.0.1-blue)](https://img.shields.io/badge/version-0.0.1-blue)
 
-<img src="docs/images/project-logo.png" width="50%" alt="jormungandr VOD Logo" style="display: block; margin-left: auto; margin-right: auto;">
+<img src="https://raw.githubusercontent.com/Knolaisen/jormungandr/refs/heads/main/docs/images/project-logo.png" width="50%" alt="jormungandr VOD Logo" style="display: block; margin-left: auto; margin-right: auto;">
 </div>
 
 <details> 
@@ -31,7 +31,7 @@
 
 ## Description
 
-Jormungandr is an novel end-to-end video object detection system that leverages the Spatial-Temporal Mamba architecture to accurately detect and track objects across video frames. By combining spatial and temporal information, Jormungandr enhances detection accuracy and robustness, making it suitable for various applications such as surveillance, autonomous driving, and video analytics.
+Jormungandr is an novel end-to-end video object detection system that leverages the Spatial-Temporal Mamba architecture to accurately detect and track objects across video frames. By combining spatial and temporal information, Jormungandr enhances detection accuracy and robustness, making it suitable for various applications such as collision avoidance, search and rescue operations, surveillance, autonomous driving, and video analytics.
 
 ## Getting started
 
@@ -96,7 +96,7 @@ from jormungandr import Jormungandr
 
 device = torch.device("cuda")
 
-frames, channels, height, width = 32, 8, 3, 224, 224
+frames, channels, height, width = 8, 3, 224, 224
 x = torch.randn(frames, channels, height, width).to(device)
 
 # Initialize model
