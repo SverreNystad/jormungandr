@@ -182,50 +182,6 @@ def _ensure_3ch(img: torch.Tensor) -> torch.Tensor:
     raise ValueError(f"Unsupported channel count: {c} (shape {tuple(img.shape)})")
 
 
-def create_dataloaders(
-    dataset_name: str = "detection-datasets/coco",
-    cache_dir: str = "../data/",
-    batch_size: int = 32,
-    seed: int = 42,
-    shuffle: bool = True,
-    collate_fn: Callable = _collate_fn,
-    subset_size: int | None = None,
-) -> tuple[DataLoader, DataLoader]:
-    ds = load_dataset(dataset_name, cache_dir=cache_dir)
-
-    torch_train_ds = ds["train"].with_format("torch")
-    torch_val_ds = ds["val"].with_format("torch")
-    train_generator = build_torch_generator(seed)
-    val_generator = build_torch_generator(seed + 1)
-
-    if subset_size is not None:
-        torch_train_ds = torch_train_ds.shuffle(seed=seed).select(range(subset_size))
-        torch_val_ds = torch_val_ds.shuffle(seed=seed + 1).select(range(subset_size))
-
-    train_loader = DataLoader(
-        torch_train_ds,
-        batch_size=batch_size,
-        shuffle=shuffle,
-        collate_fn=collate_fn,
-        worker_init_fn=seed_worker,
-        generator=train_generator,
-        num_workers=len(os.sched_getaffinity(0)),
-        pin_memory=True,
-        prefetch_factor=2,  # tune upward if needed
-    )
-    val_loader = DataLoader(
-        torch_val_ds,
-        batch_size=batch_size,
-        shuffle=False,
-        collate_fn=collate_fn,
-        worker_init_fn=seed_worker,
-        generator=val_generator,
-        num_workers=len(os.sched_getaffinity(0)),
-        pin_memory=True,
-    )
-    return train_loader, val_loader
-
-
 def _collate_fn_vod(batch):
     all_images = []
     all_annotations = []
@@ -370,53 +326,138 @@ class VODDataset(Dataset):
         return img, {"image_id": frame_number, "annotations": annotations}
 
 
-def create_vod_dataloader(
-    path: str = "../data/",
-    dataset_name: str = "mot17",
-    n_frames: int = 4,
-    batch_size: int = 1,
-    seed: int = 42,
-    shuffle: bool = True,
-    collate_fn: Callable = _collate_fn_vod,
-    val_split: float = 0.2,
-) -> tuple[DataLoader, DataLoader]:
-    data_path = os.path.join(path, dataset_name.upper(), "train")
-    sequence_dirs = sorted(
-        [
-            os.path.join(data_path, d)
-            for d in os.listdir(data_path)
-            if os.path.isdir(os.path.join(data_path, d))
-        ]
-    )
+def _build_image_datasets(
+    dataset_name: str,
+    cache_dir: str,
+    seed: int,
+    subset_size: int | None,
+):
+    ds = load_dataset(dataset_name, cache_dir=cache_dir)
+    train_ds = ds["train"].with_format("torch")
+    val_ds = ds["val"].with_format("torch")
+    if subset_size is not None:
+        train_ds = train_ds.shuffle(seed=seed).select(range(subset_size))
+        val_ds = val_ds.shuffle(seed=seed + 1).select(range(subset_size))
+    return train_ds, val_ds
 
+
+def _build_vod_datasets(
+    data_dir: str,
+    dataset_name: str,
+    n_frames: int,
+    val_split: float,
+):
+    data_path = os.path.join(data_dir, dataset_name.upper(), "train")
+    sequence_dirs = sorted(
+        os.path.join(data_path, d)
+        for d in os.listdir(data_path)
+        if os.path.isdir(os.path.join(data_path, d))
+    )
     n_val = max(1, int(len(sequence_dirs) * val_split))
     train_dirs = sequence_dirs[:-n_val]
     val_dirs = sequence_dirs[-n_val:]
+    return (
+        VODDataset(train_dirs, n_frames=n_frames),
+        VODDataset(val_dirs, n_frames=n_frames),
+    )
 
-    train_dataset = VODDataset(train_dirs, n_frames=n_frames)
-    val_dataset = VODDataset(val_dirs, n_frames=n_frames)
 
-    train_generator = build_torch_generator(seed)
-    val_generator = build_torch_generator(seed + 1)
-
-    train_loader = DataLoader(
-        train_dataset,
+def _build_loader(
+    dataset,
+    *,
+    batch_size: int,
+    shuffle: bool,
+    collate_fn: Callable,
+    generator,
+    prefetch_factor: int | None = None,
+) -> DataLoader:
+    kwargs = dict(
         batch_size=batch_size,
         shuffle=shuffle,
         collate_fn=collate_fn,
         worker_init_fn=seed_worker,
-        generator=train_generator,
+        generator=generator,
         num_workers=len(os.sched_getaffinity(0)),
         pin_memory=True,
     )
-    val_loader = DataLoader(
-        val_dataset,
+    if prefetch_factor is not None:
+        kwargs["prefetch_factor"] = prefetch_factor
+    return DataLoader(dataset, **kwargs)
+
+
+_DATASET_DEFAULTS = {
+    "image": {
+        "dataset_name": "detection-datasets/coco",
+        "collate_fn": _collate_fn,
+        "batch_size": 32,
+        "train_prefetch_factor": 2,
+    },
+    "video": {
+        "dataset_name": "mot17",
+        "collate_fn": _collate_fn_vod,
+        "batch_size": 1,
+        "train_prefetch_factor": None,
+    },
+}
+
+
+def create_dataloaders(
+    dataset_type: str = "image",
+    dataset_name: str | None = None,
+    data_dir: str = "../data/",
+    batch_size: int | None = None,
+    seed: int = 42,
+    shuffle: bool = True,
+    collate_fn: Callable | None = None,
+    subset_size: int | None = None,  # image-only
+    n_frames: int = 4,  # video-only
+    val_split: float = 0.2,  # video-only
+) -> tuple[DataLoader, DataLoader]:
+    """Build train/val DataLoaders for either a HuggingFace image detection
+    dataset or a local MOT-style video object-detection dataset.
+
+    `dataset_type` picks the pipeline:
+      - "image": `datasets.load_dataset(dataset_name)` + DETR image collator.
+      - "video": `VODDataset` over `data_dir/<DATASET_NAME>/train/*` + clip collator.
+
+    Per-type defaults (dataset name, collate_fn, batch_size, prefetch_factor)
+    live in `_DATASET_DEFAULTS` and can be overridden by the matching kwarg.
+    """
+    if dataset_type not in _DATASET_DEFAULTS:
+        raise ValueError(
+            f"Unknown dataset_type {dataset_type!r}; expected 'image' or 'video'."
+        )
+
+    defaults = _DATASET_DEFAULTS[dataset_type]
+    dataset_name = dataset_name or defaults["dataset_name"]
+    collate_fn = collate_fn or defaults["collate_fn"]
+    batch_size = batch_size if batch_size is not None else defaults["batch_size"]
+
+    if dataset_type == "image":
+        train_ds, val_ds = _build_image_datasets(
+            dataset_name, data_dir, seed, subset_size
+        )
+    else:  # "video"
+        train_ds, val_ds = _build_vod_datasets(
+            data_dir, dataset_name, n_frames, val_split
+        )
+
+    train_gen = build_torch_generator(seed)
+    val_gen = build_torch_generator(seed + 1)
+
+    train_loader = _build_loader(
+        train_ds,
+        batch_size=batch_size,
+        shuffle=shuffle,
+        collate_fn=collate_fn,
+        generator=train_gen,
+        prefetch_factor=defaults["train_prefetch_factor"],
+    )
+    val_loader = _build_loader(
+        val_ds,
         batch_size=batch_size,
         shuffle=False,
         collate_fn=collate_fn,
-        worker_init_fn=seed_worker,
-        generator=val_generator,
-        num_workers=len(os.sched_getaffinity(0)),
-        pin_memory=True,
+        generator=val_gen,
     )
     return train_loader, val_loader
