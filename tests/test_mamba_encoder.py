@@ -8,7 +8,7 @@ import pytest
     not torch.cuda.is_available(), reason="CUDA is required for this test"
 )
 def test_mamba_encoder_inference():
-    batch_size, sequence_length, model_dimension = 2, 64, 16
+    batch_size, sequence_length, model_dimension = 2, 64, 64
     x = torch.randn(batch_size, sequence_length, model_dimension).to("cuda")
     mask = torch.ones(batch_size, sequence_length).to("cuda")
     # mask = None
