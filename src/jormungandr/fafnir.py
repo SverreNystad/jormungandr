@@ -1,7 +1,7 @@
 from torch import nn, Tensor
 import torch
 
-from jormungandr.encoder import MambaEncoder, DETREncoder, MambaEncoderFFN
+from jormungandr.encoder import MambaEncoder, DETREncoder, MambaEncoderFFN, Encoder
 from jormungandr.detr_decoder import DETRDecoder
 from jormungandr.output_head import FCNNPredictionHead
 from jormungandr.backbone import Backbone
@@ -28,7 +28,7 @@ class Fafnir(nn.Module):
         ).to(device)
 
         # Encoder
-        self.encoder = None
+        self.encoder: Encoder
         match config.encoder.encoder_type.lower():
             case "mamba":
                 self.encoder = MambaEncoder(

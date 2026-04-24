@@ -9,9 +9,9 @@ from jormungandr.utils.model_fetcher import fetch_detr_model
 class Encoder(Protocol):
     def forward(
         self,
-        flattened_feature_maps: Tensor,
+        x: Tensor,
         position_embedding: Tensor | None = None,
-        mask: Tensor | None = None,
+        pixel_mask: Tensor | None = None,
     ) -> torch.Tensor: ...
 
 

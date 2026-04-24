@@ -206,7 +206,7 @@ class BackboneConfig(BaseModel):
     )
 
 
-class FafnirConfig(BaseModel):
+class DETRConfig(BaseModel):
     input_size: int = Field(default=512, description="Input size for the Fafnir model")
     num_classes: int = Field(
         default=80, description="Number of classes for object detection"
@@ -217,10 +217,6 @@ class FafnirConfig(BaseModel):
     backbone: BackboneConfig = Field(
         default_factory=BackboneConfig,
         description="Configuration for the backbone used in Fafnir",
-    )
-    encoder: EncoderConfig = Field(
-        default_factory=EncoderConfig,
-        description="Configuration for the encoder used in Fafnir",
     )
     decoder: DecoderConfig = Field(
         default_factory=DecoderConfig,
@@ -240,23 +236,17 @@ class FafnirConfig(BaseModel):
     )
 
 
-class JormungandrConfig(BaseModel):
-    input_size: int = Field(
-        default=512, description="Input size for the Jormungandr model"
+class FafnirConfig(DETRConfig):
+    encoder: EncoderConfig = Field(
+        default_factory=EncoderConfig,
+        description="Configuration for the encoder used in Fafnir",
     )
-    model_dimension: int = Field(
-        default=256, description="Model/token embedding dimension (d_model)"
-    )
-    num_classes: int = Field(
-        default=80, description="Number of classes for object detection"
-    )
+
+
+class JormungandrConfig(DETRConfig):
     num_frames: int = Field(
         default=4,
         description="Number of frames in the input video clip for Jormungandr",
-    )
-    backbone: BackboneConfig = Field(
-        default_factory=BackboneConfig,
-        description="Configuration for the backbone used in Fafnir",
     )
     spatial_encoder: EncoderConfig = Field(
         default_factory=EncoderConfig,
@@ -266,23 +256,11 @@ class JormungandrConfig(BaseModel):
         default_factory=EncoderConfig,
         description="Configuration for the temporal encoder used in Jormungandr (operates across frames)",
     )
-    decoder: DecoderConfig = Field(
-        default_factory=DecoderConfig,
-        description="Configuration for the decoder used in Jormungandr",
-    )
-    output_head: OutputHeadConfig = Field(
-        default_factory=OutputHeadConfig,
-        description="Configuration for the output head used in Jormungandr",
-    )
-    detr_name: str = Field(
-        default="facebook/detr-resnet-50",
-        description="Name of the pre-trained DETR model to use for the encoder and decoder (e.g., 'facebook/detr-resnet-50')",
-    )
 
 
 class Config(BaseModel):
     trainer: TrainerConfig
-    fafnir: FafnirConfig
+    model: FafnirConfig | JormungandrConfig
 
 
 def load_config(filename: str) -> Config:
