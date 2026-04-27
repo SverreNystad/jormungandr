@@ -81,6 +81,7 @@ def train(
 
     wandb.watch(model, log="all", log_freq=100)
     training_loader, validation_loader = create_dataloaders(
+        dataset_name=config.trainer.dataset_name,
         batch_size=config.trainer.batch_size,
         seed=config.trainer.seed,
         subset_size=config.trainer.subset_size,
@@ -400,6 +401,7 @@ def validate(config: Config) -> None:
         shutil.rmtree(artifact_dir)  # Clean up the downloaded artifact directory
 
     training_loader, validation_loader = create_dataloaders(
+        dataset_name=config.trainer.dataset_name,
         batch_size=config.trainer.val_batch_size,
         seed=config.trainer.seed,
     )

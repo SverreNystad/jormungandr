@@ -386,13 +386,13 @@ def _build_loader(
 
 
 _DATASET_DEFAULTS = {
-    "image": {
+    "coco": {
         "dataset_name": "detection-datasets/coco",
         "collate_fn": _collate_fn,
         "batch_size": 32,
         "train_prefetch_factor": 2,
     },
-    "video": {
+    "mot17": {
         "dataset_name": "mot17",
         "collate_fn": _collate_fn_vod,
         "batch_size": 1,
@@ -402,15 +402,13 @@ _DATASET_DEFAULTS = {
 
 
 def create_dataloaders(
-    dataset_type: str = "image",
-    dataset_name: str | None = None,
-    data_dir: str = "../data/",
+    dataset_name: str = "coco",
+    data_dir: str = "./data/",
     batch_size: int | None = None,
     seed: int = 42,
     shuffle: bool = True,
     collate_fn: Callable | None = None,
     subset_size: int | None = None,  # image-only
-    n_frames: int = 4,  # video-only
     val_split: float = 0.2,  # video-only
 ) -> tuple[DataLoader, DataLoader]:
     """Build train/val DataLoaders for either a HuggingFace image detection
@@ -423,24 +421,26 @@ def create_dataloaders(
     Per-type defaults (dataset name, collate_fn, batch_size, prefetch_factor)
     live in `_DATASET_DEFAULTS` and can be overridden by the matching kwarg.
     """
-    if dataset_type not in _DATASET_DEFAULTS:
+    if dataset_name not in _DATASET_DEFAULTS:
         raise ValueError(
-            f"Unknown dataset_type {dataset_type!r}; expected 'image' or 'video'."
+            f"Unknown dataset_name {dataset_name!r}; expected 'coco' or 'mot17'."
         )
 
-    defaults = _DATASET_DEFAULTS[dataset_type]
-    dataset_name = dataset_name or defaults["dataset_name"]
+    defaults = _DATASET_DEFAULTS[dataset_name]
+    dataset_name = defaults["dataset_name"]
     collate_fn = collate_fn or defaults["collate_fn"]
     batch_size = batch_size if batch_size is not None else defaults["batch_size"]
 
-    if dataset_type == "image":
+    if dataset_name == "coco":
         train_ds, val_ds = _build_image_datasets(
             dataset_name, data_dir, seed, subset_size
         )
-    else:  # "video"
+    else:
         train_ds, val_ds = _build_vod_datasets(
-            data_dir, dataset_name, n_frames, val_split
+            data_dir, dataset_name, batch_size, val_split
         )
+        # each batch is a clip of n_frames frames, so we don't want to batch multiple clips together
+        batch_size = 1
 
     train_gen = build_torch_generator(seed)
     val_gen = build_torch_generator(seed + 1)

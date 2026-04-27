@@ -132,6 +132,12 @@ class TrainerConfig(BaseModel):
         description="Epoch number at which to unfreeze the output head if it is initially frozen",
     )
 
+    # Dataset and dataloader parameters
+    dataset_name: str = Field(
+        default="coco",
+        description="Name of the dataset to use (e.g., 'coco', 'mot17')",
+    )
+
 
 class DecoderConfig(BaseModel):
     freeze_decoder: bool = Field(
