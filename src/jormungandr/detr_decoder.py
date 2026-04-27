@@ -1,3 +1,15 @@
+"""
+DETR transformer decoder wrapper with optional pre-trained weights.
+
+Wraps the HuggingFace DETR decoder and object-query position embeddings,
+providing a unified forward interface used by both Fafnir and Jormungandr.
+The decoder can be initialised from pre-trained weights or from scratch,
+and optionally frozen during early training.
+
+Classes:
+    DETRDecoder -- transformer decoder mapping encoder features to per-query hidden states.
+"""
+
 import torch
 from torch import nn, Tensor
 

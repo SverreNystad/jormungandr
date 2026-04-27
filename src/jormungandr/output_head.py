@@ -1,3 +1,11 @@
+"""
+Detection output head mapping decoder hidden states to class logits and bounding boxes.
+
+Classes:
+    FCNNPredictionHead -- linear classifier + 3-layer MLP box predictor, optionally
+                          initialised from pre-trained DETR weights.
+"""
+
 from torch import nn, Tensor
 from transformers import DetrForObjectDetection
 from jormungandr.config.configuration import OutputHeadConfig

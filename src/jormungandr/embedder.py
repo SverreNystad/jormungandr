@@ -1,3 +1,17 @@
+"""
+Spatial and temporal positional embeddings for DETR-style models.
+
+All embedders implement the Embedder protocol, exposing a
+``forward(shape, device, dtype, mask)`` interface so they can be swapped
+without changing the calling code.
+
+Classes:
+    Embedder                      -- structural protocol all embedders must satisfy.
+    DetrSinePositionEmbedding     -- 2-D sine/cosine spatial embedding over (H, W) feature maps.
+    DetrLearnedPositionEmbedding  -- learned row/column embedding (up to 50 × 50 grid).
+    TemporalSinePositionEmbedding -- 1-D sine/cosine embedding across video frame indices.
+"""
+
 from typing import Protocol
 
 import torch

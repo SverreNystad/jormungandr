@@ -1,3 +1,15 @@
+"""
+Learning rate scheduler factory for PyTorch optimizers.
+
+Supports StepLR, CosineAnnealingLR, CosineAnnealingWarmRestarts,
+ReduceLROnPlateau, and OneCycleLR — all configured through SchedulerConfig.
+T_max and total_steps are inferred from epochs and steps_per_epoch when not
+explicitly provided in the config.
+
+Functions:
+    build_scheduler -- instantiate and return the configured LR scheduler, or None.
+"""
+
 from torch import optim
 from torch.optim import lr_scheduler
 

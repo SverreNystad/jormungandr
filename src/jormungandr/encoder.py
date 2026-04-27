@@ -1,3 +1,17 @@
+"""
+Encoder implementations for spatial feature extraction.
+
+All encoders implement the Encoder protocol and expose a
+``forward(x, position_embedding, pixel_mask)`` interface so they are
+interchangeable via configuration.
+
+Classes:
+    Encoder         -- structural protocol every encoder must satisfy.
+    MambaEncoder    -- stacked Mamba (SSM) layers with pre-norm and residual connections.
+    MambaEncoderFFN -- MambaEncoder with an additional FFN sub-layer per block (Mamba + FFN).
+    DETREncoder     -- wraps the HuggingFace DETR transformer encoder.
+"""
+
 from typing import Protocol, Literal
 from mamba_ssm import Mamba, Mamba2
 from torch import nn, Tensor

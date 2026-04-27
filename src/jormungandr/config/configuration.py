@@ -1,3 +1,26 @@
+"""
+Pydantic configuration dataclasses for Fafnir and Jormungandr.
+
+Loads W&B credentials from environment variables at import time and raises
+immediately if they are missing. YAML configs are resolved relative to this
+file's directory via `load_config`.
+
+Classes:
+    LossConfig         -- loss weights and auxiliary-loss settings.
+    SchedulerConfig    -- LR scheduler name and extra kwargs.
+    TrainerConfig      -- full training-loop settings (LR, batch size, etc.).
+    BackboneConfig     -- backbone freeze flag and model-name.
+    EncoderConfig      -- encoder type, layer count, and Mamba-specific dims.
+    DecoderConfig      -- decoder freeze, query count, and pre-trained flag.
+    OutputHeadConfig   -- output-head freeze and pre-trained flag.
+    FafnirConfig       -- single-frame model config (extends DETRConfig).
+    JormungandrConfig  -- video model config with spatial/temporal encoders.
+    Config             -- top-level config tying trainer and model together.
+
+Functions:
+    load_config -- parse a YAML file from this directory into a Config.
+"""
+
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 import os

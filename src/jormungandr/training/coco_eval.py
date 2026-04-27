@@ -1,3 +1,14 @@
+"""
+COCO evaluation wrapper that accumulates predictions and ground-truth across batches.
+
+Converts model outputs (normalised cxcywh boxes, class logits) and
+HuggingFace-style label dicts into the format expected by pycocotools,
+then runs COCOeval at the end of the epoch.
+
+Classes:
+    CocoEvaluator -- stateful accumulator; call update() per batch, evaluate() at epoch end.
+"""
+
 import torch
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval

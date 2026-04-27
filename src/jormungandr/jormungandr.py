@@ -1,3 +1,11 @@
+"""
+End-to-end video object detection model using a Spatial-Temporal Mamba architecture.
+
+The pipeline is: Backbone -> spatial Mamba encoder (per-frame, weight-shared) ->
+temporal Mamba encoder (across frames) -> DETR transformer decoder -> FCNN prediction head.
+Produces per-frame class probabilities and bounding box coordinates for all object queries.
+"""
+
 from torch import nn, Tensor
 import torch
 

@@ -1,3 +1,15 @@
+"""
+Cached loader for HuggingFace DETR models.
+
+Results are memoised with functools.lru_cache so each unique combination of
+(model_name, is_pre_trained, num_encoder_layers, auxiliary_loss) is fetched
+from the Hub only once per process. Subsequent calls return the same object,
+avoiding redundant downloads and GPU memory allocations.
+
+Functions:
+    fetch_detr_model -- return a DetrForObjectDetection instance, cached by args.
+"""
+
 from functools import lru_cache
 from transformers import DetrForObjectDetection, DetrConfig
 

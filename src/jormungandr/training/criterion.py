@@ -1,3 +1,19 @@
+"""
+Loss functions and Hungarian matchers for DETR-style set-prediction object detection.
+
+Provides GIoU-based and CIoU-based losses. Both use Hungarian matching to assign
+predictions to ground-truth boxes before computing classification and box regression
+terms. The GIoU variant re-exports the HuggingFace implementation; the CIoU variant
+uses torchvision's complete_box_iou with a custom matcher.
+
+Classes:
+    HungarianMatcherWithCIoU -- Hungarian matcher using CIoU instead of GIoU.
+
+Functions:
+    CIoULoss       -- compute set-prediction loss with CIoU box regression.
+    build_criterion -- factory that returns the named loss callable.
+"""
+
 # taken from https://github.com/huggingface/transformers/blob/main/src/transformers/loss/loss_for_object_detection.py
 import torch
 from torch import nn

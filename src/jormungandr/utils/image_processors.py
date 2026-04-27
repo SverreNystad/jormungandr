@@ -1,3 +1,16 @@
+"""
+Custom DETR image processor that suppresses bounding-box rescaling during padding.
+
+The upstream DetrImageProcessor ties bbox rescaling to annotation conversion,
+which causes boxes to be re-scaled a second time when images are padded to a
+common batch size. DetrImageProcessorNoPadBBoxUpdate fixes this by forcing
+update_bboxes=False in the pad step, keeping boxes normalised to original image
+dimensions throughout the pipeline.
+
+Classes:
+    DetrImageProcessorNoPadBBoxUpdate -- drop-in replacement for DetrImageProcessor.
+"""
+
 from torch import TensorType
 from transformers import DetrImageProcessor
 import numpy as np

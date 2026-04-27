@@ -1,3 +1,23 @@
+"""
+Dataset and DataLoader construction for image and video object detection.
+
+Supports two dataset pipelines controlled by the `dataset_name` argument to
+`create_dataloaders`:
+
+  - "coco": streams from HuggingFace Hub (detection-datasets/coco).
+  - "mot17": loads local MOT-style sequence directories via VODDataset.
+
+Both pipelines produce batches with keys ``pixel_values``, ``pixel_mask``, and
+``labels``, formatted for DETR-style models. Class indices are mapped from the
+80-class COCO convention to the 91-class COCO standard automatically.
+
+Classes:
+    VODDataset -- sliding-window clip dataset over MOT-format sequence directories.
+
+Functions:
+    create_dataloaders -- build train/val DataLoaders for a named dataset.
+"""
+
 import os
 from typing import Callable
 
