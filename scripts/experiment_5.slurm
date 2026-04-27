@@ -1,6 +1,6 @@
 #!/bin/sh
 #SBATCH --account=share-ie-idi
-#SBATCH --job-name="experiment-2"
+#SBATCH --job-name="experiment-5"
 #SBATCH --time=10-12:00:00
 #SBATCH --partition=GPUQ
 #SBATCH --mem=80GB
