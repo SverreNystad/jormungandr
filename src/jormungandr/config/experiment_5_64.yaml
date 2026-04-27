@@ -43,7 +43,10 @@ model:
   backbone:
     freeze_backbone: true
   decoder:
-    freeze_decoder: true
+    freeze_decoder: false
+    use_pre_trained: true
     auxiliary_loss: true
   output_head:
-    freeze_prediction_head: true
+    freeze_prediction_head: false
+    use_pre_trained: true
+
