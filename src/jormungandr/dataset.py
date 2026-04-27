@@ -147,7 +147,7 @@ def _collate_fn(batch):
             {"image_id": int(item["image_id"].item()), "annotations": annotations}
         )
 
-    encoded = image_processor(images=images, annotations=targets, return_tensors="pt")
+    encoded = image_processor(images=images, annotations=targets, return_tensors="pt", size={"shortest_edge": 1600, "longest_edge": 2666})
 
     # DetrImageProcessor scales label["area"] by the resize ratio
     # (resize_annotation multiplies by ratio_w * ratio_h). COCO eval size
