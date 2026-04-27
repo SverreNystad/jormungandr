@@ -7,7 +7,6 @@ Classes:
 """
 
 from torch import nn, Tensor
-from transformers import DetrForObjectDetection
 from jormungandr.config.configuration import OutputHeadConfig
 from jormungandr.utils.model_fetcher import fetch_detr_model
 
