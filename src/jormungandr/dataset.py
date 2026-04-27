@@ -434,9 +434,9 @@ def create_dataloaders(
     """Build train/val DataLoaders for either a HuggingFace image detection
     dataset or a local MOT-style video object-detection dataset.
 
-    `dataset_type` picks the pipeline:
-      - "image": `datasets.load_dataset(dataset_name)` + DETR image collator.
-      - "video": `VODDataset` over `data_dir/<DATASET_NAME>/train/*` + clip collator.
+    `dataset_name` picks the pipeline:
+      - "coco": `datasets.load_dataset(dataset_name)` + DETR image collator.
+      - "mot17": `VODDataset` over `data_dir/<DATASET_NAME>/train/*` + clip collator.
 
     Per-type defaults (dataset name, collate_fn, batch_size, prefetch_factor)
     live in `_DATASET_DEFAULTS` and can be overridden by the matching kwarg.
