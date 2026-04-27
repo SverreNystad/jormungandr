@@ -1,6 +1,5 @@
 import argparse
 import wandb
-from torch.profiler import profile, ProfilerActivity
 from codecarbon import track_emissions
 from jormungandr.config.configuration import (
     load_config,
@@ -54,9 +53,4 @@ if __name__ == "__main__":
         help="Path to the trained model checkpoint to validate",
     )
     args = parser.parse_args()
-    # with profile(
-    #     activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
-    #     record_shapes=True,
-    #     profile_memory=True,
-    # ) as prof:
     main(args.config_flag or args.config or experiment)

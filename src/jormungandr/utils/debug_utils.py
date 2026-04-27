@@ -1,3 +1,17 @@
+"""
+Debugging utilities for detecting non-finite values in tensors and model parameters.
+
+Checks are gated behind the JORMUNGANDR_DEBUG_NAN environment variable so they
+can be enabled selectively without modifying code. Integer and boolean tensors
+are skipped — only floating-point and complex tensors are inspected.
+
+Functions:
+    debug_non_finite_enabled         -- return True when JORMUNGANDR_DEBUG_NAN is set.
+    assert_finite_tensor             -- raise RuntimeError if a tensor contains NaN or Inf.
+    assert_module_parameters_finite  -- raise if any parameter of a module is non-finite.
+    assert_module_gradients_finite   -- raise if any gradient of a module is non-finite.
+"""
+
 import os
 
 import torch

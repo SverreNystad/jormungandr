@@ -58,7 +58,7 @@ def test_padding_mask_consistency(image_loaders):
 @pytest.mark.parametrize("n_frames", [4, 8, 16])
 def test_mot_dataset(n_frames):
     train_loader, val_loader = create_dataloaders(
-        "video", data_dir="./data", batch_size=1, n_frames=n_frames
+        "mot17", data_dir="./data", batch_size=n_frames
     )
 
     # Entire batch must have same width and height

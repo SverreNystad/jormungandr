@@ -1,3 +1,11 @@
+"""
+End-to-end video object detection model using a Spatial-Temporal Mamba architecture.
+
+The pipeline is: Backbone -> spatial Mamba encoder (per-frame, weight-shared) ->
+temporal Mamba encoder (across frames) -> DETR transformer decoder -> FCNN prediction head.
+Produces per-frame class probabilities and bounding box coordinates for all object queries.
+"""
+
 from torch import nn, Tensor
 import torch
 
@@ -123,11 +131,11 @@ class Jormungandr(nn.Module):
             device=self.device,
             dtype=temporal_input.dtype,
         )
-        temporal_input = temporal_input + temporal_position_embedding
 
         # Extract Temporal features across frames using the Temporal encoders
         temporal_features = self.temporal_encoder.forward(
             temporal_input,
+            position_embedding=temporal_position_embedding,
         )
 
         # Reshape temporal features back to (num_frames, sequence_length, model_dimension) for the decoder

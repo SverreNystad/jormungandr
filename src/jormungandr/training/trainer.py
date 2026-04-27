@@ -1,27 +1,16 @@
 """
-The trainer script is responsible for training the Jormungandr model. It includes functions for loading data, defining the training loop, and evaluating the model's performance. The trainer will utilize the output head defined in `output_head.py` to compute the loss and update the model's parameters during training. It will also handle saving and loading model checkpoints, as well as logging training metrics for analysis.
-It shall be able to train the model on a given dataset, and evaluate its performance on a validation set. The trainer will also include functionality for hyperparameter tuning and early stopping based on validation performance. Additionally, it will support distributed training across multiple GPUs if available.
-It shall be able to customize the training process with different optimizers, learning rate schedulers, and loss functions. The trainer will also include functionality for visualizing training progress and results, such as plotting loss curves and displaying sample predictions on the validation set. Overall, the trainer will be a crucial component in the development and optimization of the Jormungandr model for object detection tasks.
-It shall be able to train both the Fafnir and Jormungandr models
+Training and validation loop for Fafnir and Jormungandr.
 
-It shall use:
-* Torch
-* Torchvision for data loading and augmentation
-* Freeze backbone
-* Learning rate schedular
-* Different LR for encoder and decoder
-* MultiGPU support Accelerate
-* Wandb for logging and visualization
-    - Log epoch-wise training and validation loss
-    - Log validation metrics
-        - mAP, precision, recall, etc.
-        - CIoU, GIoU, etc.
-    - Log validation images with predicted bounding boxes and labels
-    - Log model checkpoints and hyperparameters
-        - Learning rate, gradient norms, etc.
-    - Watch model gradients and parameters
+Reads config.yaml at import time, builds the model, dataloaders, optimizer, and
+scheduler, then runs an epoch loop with per-batch gradient updates. The best
+checkpoint (by validation AP) is saved to W&B as a model artifact. Separate
+learning rates are used for the backbone, encoder(s), decoder, and output head.
 
-*
+Functions:
+    train           -- full training loop; returns the trained model.
+    validate        -- run a single validation pass and print results.
+    train_one_epoch -- one epoch of forward/backward/optimizer steps.
+    run_validation  -- validation pass with COCO eval and W&B image logging.
 """
 
 from tqdm import tqdm, trange
@@ -81,6 +70,7 @@ def train(
 
     wandb.watch(model, log="all", log_freq=100)
     training_loader, validation_loader = create_dataloaders(
+        dataset_name=config.trainer.dataset_name,
         batch_size=config.trainer.batch_size,
         seed=config.trainer.seed,
         subset_size=config.trainer.subset_size,
@@ -400,6 +390,7 @@ def validate(config: Config) -> None:
         shutil.rmtree(artifact_dir)  # Clean up the downloaded artifact directory
 
     training_loader, validation_loader = create_dataloaders(
+        dataset_name=config.trainer.dataset_name,
         batch_size=config.trainer.val_batch_size,
         seed=config.trainer.seed,
     )

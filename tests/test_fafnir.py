@@ -1,9 +1,6 @@
-from jormungandr.backbone import Backbone
 from jormungandr.fafnir import Fafnir
 from jormungandr.config.configuration import (
     FafnirConfig,
-    DecoderConfig,
-    EncoderConfig,
     load_config,
 )
 

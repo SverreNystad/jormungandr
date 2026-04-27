@@ -1,7 +1,13 @@
 """
-Wrapper around backbone models.
-One should be able to swap out backbone to different models, e.g. ResNet, Swin, etc., without affecting the rest of the architecture.
+CNN backbone wrapper for DETR-style feature extraction.
 
+Extracts a single-scale feature map from an image and projects it to the
+model dimension. Swapping to a different backbone (ResNet-50, ResNet-101,
+Swin, etc.) only requires changing the DETR model name — the rest of the
+architecture is unaffected.
+
+Classes:
+    Backbone -- wraps a HuggingFace DETR backbone and its input projection layer.
 """
 
 import torch

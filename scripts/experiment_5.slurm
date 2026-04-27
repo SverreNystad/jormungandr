@@ -1,15 +1,15 @@
 #!/bin/sh
 #SBATCH --account=share-ie-idi
-#SBATCH --job-name="validate"
-#SBATCH --time=01:00:00
+#SBATCH --job-name="experiment-5"
+#SBATCH --time=10-12:00:00
 #SBATCH --partition=GPUQ
 #SBATCH --mem=80GB
 #SBATCH --cpus-per-task=6
 #SBATCH --gres=gpu:1
 #SBATCH --nodes=1
-#SBATCH --constraint="(a100)&(gpu40g)"
-#SBATCH --output=slurm_outputs/output_master.txt
-#SBATCH --error=slurm_outputs/output_master.err
+#SBATCH --constraint="(a100)&(gpu80g)"
+#SBATCH --output=slurm_outputs/output_experiment_5.txt
+#SBATCH --error=slurm_outputs/output_experiment_5.err
 
 
 WORKDIR=../${SLURM_SUBMIT_DIR}
@@ -28,6 +28,7 @@ pip install uv --user
 uv sync
 
 # Run the Python script
-uv run python validate.py --config experiment_2.yaml --model-path models/model_20260411_100636_9.546_24
+uv run python train.py --config experiment_5_fafnir.yaml
+
 
 echo "Job finished"

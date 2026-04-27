@@ -1,3 +1,14 @@
+"""
+COCO evaluation wrapper that accumulates predictions and ground-truth across batches.
+
+Converts model outputs (normalised cxcywh boxes, class logits) and
+HuggingFace-style label dicts into the format expected by pycocotools,
+then runs COCOeval at the end of the epoch.
+
+Classes:
+    CocoEvaluator -- stateful accumulator; call update() per batch, evaluate() at epoch end.
+"""
+
 import torch
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
@@ -15,7 +26,7 @@ class CocoEvaluator:
 
     def update(
         self,
-        logits: torch.Tensor,      # [B, Q, num_classes+1]
+        logits: torch.Tensor,  # [B, Q, num_classes+1]
         pred_boxes: torch.Tensor,  # [B, Q, 4] normalized cxcywh
         labels: list[dict],
     ) -> None:
@@ -30,9 +41,11 @@ class CocoEvaluator:
             image_id = int(label["image_id"].item())
             orig_h, orig_w = label["orig_size"].tolist()
 
-            self.gt_images.append({"id": image_id, "height": int(orig_h), "width": int(orig_w)})
+            self.gt_images.append(
+                {"id": image_id, "height": int(orig_h), "width": int(orig_w)}
+            )
 
-            gt_boxes = label["boxes"].cpu()           # [N, 4] normalized cxcywh
+            gt_boxes = label["boxes"].cpu()  # [N, 4] normalized cxcywh
             gt_classes = label["class_labels"].cpu()  # [N] coco91 category IDs
             gt_areas = label.get("area", None)
             gt_iscrowd = label.get("iscrowd", None)
@@ -41,24 +54,32 @@ class CocoEvaluator:
                 gt_xywh = _cxcywh_norm_to_xywh_abs(gt_boxes, orig_w, orig_h)
                 for i in range(len(gt_classes)):
                     xywh = gt_xywh[i].tolist()
-                    self.gt_annotations.append({
-                        "id": self._ann_id,
-                        "image_id": image_id,
-                        "category_id": int(gt_classes[i].item()),
-                        "bbox": [round(v, 2) for v in xywh],
-                        "iscrowd": int(gt_iscrowd[i].item()) if gt_iscrowd is not None else 0,
-                        "area": float(gt_areas[i].item()) if gt_areas is not None else float(xywh[2] * xywh[3]),
-                    })
+                    self.gt_annotations.append(
+                        {
+                            "id": self._ann_id,
+                            "image_id": image_id,
+                            "category_id": int(gt_classes[i].item()),
+                            "bbox": [round(v, 2) for v in xywh],
+                            "iscrowd": int(gt_iscrowd[i].item())
+                            if gt_iscrowd is not None
+                            else 0,
+                            "area": float(gt_areas[i].item())
+                            if gt_areas is not None
+                            else float(xywh[2] * xywh[3]),
+                        }
+                    )
                     self._ann_id += 1
 
             pb_xywh = _cxcywh_norm_to_xywh_abs(pred_boxes[b], orig_w, orig_h)  # [Q, 4]
             for q in range(pb_xywh.shape[0]):
-                self.predictions.append({
-                    "image_id": image_id,
-                    "category_id": int(pred_classes[b, q].item()),
-                    "bbox": [round(v, 2) for v in pb_xywh[q].tolist()],
-                    "score": round(float(foreground_scores[b, q].item()), 4),
-                })
+                self.predictions.append(
+                    {
+                        "image_id": image_id,
+                        "category_id": int(pred_classes[b, q].item()),
+                        "bbox": [round(v, 2) for v in pb_xywh[q].tolist()],
+                        "score": round(float(foreground_scores[b, q].item()), 4),
+                    }
+                )
 
     def evaluate(self) -> dict[str, float]:
         """Run COCOeval and return a dict of metric name → value."""
@@ -84,22 +105,24 @@ class CocoEvaluator:
 
         stats = coco_eval.stats  # 12-element array
         return {
-            "coco/AP":    float(stats[0]),
-            "coco/AP50":  float(stats[1]),
-            "coco/AP75":  float(stats[2]),
-            "coco/APs":   float(stats[3]),
-            "coco/APm":   float(stats[4]),
-            "coco/APl":   float(stats[5]),
-            "coco/AR1":   float(stats[6]),
-            "coco/AR10":  float(stats[7]),
+            "coco/AP": float(stats[0]),
+            "coco/AP50": float(stats[1]),
+            "coco/AP75": float(stats[2]),
+            "coco/APs": float(stats[3]),
+            "coco/APm": float(stats[4]),
+            "coco/APl": float(stats[5]),
+            "coco/AR1": float(stats[6]),
+            "coco/AR10": float(stats[7]),
             "coco/AR100": float(stats[8]),
-            "coco/ARs":   float(stats[9]),
-            "coco/ARm":   float(stats[10]),
-            "coco/ARl":   float(stats[11]),
+            "coco/ARs": float(stats[9]),
+            "coco/ARm": float(stats[10]),
+            "coco/ARl": float(stats[11]),
         }
 
 
-def _cxcywh_norm_to_xywh_abs(boxes: torch.Tensor, orig_w: float, orig_h: float) -> torch.Tensor:
+def _cxcywh_norm_to_xywh_abs(
+    boxes: torch.Tensor, orig_w: float, orig_h: float
+) -> torch.Tensor:
     """Convert normalized [cx, cy, w, h] → absolute [x, y, w, h] (COCO bbox format)."""
     if boxes.shape[0] == 0:
         return boxes

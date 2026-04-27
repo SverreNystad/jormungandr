@@ -1,3 +1,12 @@
+"""
+Reproducibility utilities for seeding Python, NumPy, and PyTorch RNGs.
+
+Functions:
+    seed_everything       -- seed all RNGs globally for a fully deterministic run.
+    seed_worker           -- DataLoader worker_init_fn for consistent per-worker seeding.
+    build_torch_generator -- create a seeded torch.Generator for use with DataLoader.
+"""
+
 import os
 import random
 
