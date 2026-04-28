@@ -202,7 +202,7 @@ class EncoderConfig(BaseModel):
         description="Dropout rate for the feedforward network in the MambaEncoderFFN variant (ignored if encoder_type is not 'MambaFFN')",
     )
     hidden_state_dim: int = Field(
-        default=64,
+        default=16,
         description="SSM state dimension (d_state). Mamba-2 recommended range: 64–256. Mamba-1 default of 16 under-utilizes Mamba-2.",
     )
     model_dimension: int = Field(
