@@ -167,7 +167,12 @@ def _collate_fn(batch):
             {"image_id": int(item["image_id"].item()), "annotations": annotations}
         )
 
-    encoded = image_processor(images=images, annotations=targets, return_tensors="pt", size={"shortest_edge": 1600, "longest_edge": 2666})
+    encoded = image_processor(
+        images=images,
+        annotations=targets,
+        return_tensors="pt",
+        size={"shortest_edge": 1600, "longest_edge": 2666},
+    )
 
     # DetrImageProcessor scales label["area"] by the resize ratio
     # (resize_annotation multiplies by ratio_w * ratio_h). COCO eval size
@@ -422,7 +427,7 @@ _DATASET_DEFAULTS = {
 
 
 def create_dataloaders(
-    dataset_name: str = "coco",
+    dataset_identifier: str = "coco",
     data_dir: str = "./data/",
     batch_size: int | None = None,
     seed: int = 42,
@@ -434,24 +439,24 @@ def create_dataloaders(
     """Build train/val DataLoaders for either a HuggingFace image detection
     dataset or a local MOT-style video object-detection dataset.
 
-    `dataset_name` picks the pipeline:
+    `dataset_identifier` picks the pipeline:
       - "coco": `datasets.load_dataset(dataset_name)` + DETR image collator.
       - "mot17": `VODDataset` over `data_dir/<DATASET_NAME>/train/*` + clip collator.
 
     Per-type defaults (dataset name, collate_fn, batch_size, prefetch_factor)
     live in `_DATASET_DEFAULTS` and can be overridden by the matching kwarg.
     """
-    if dataset_name not in _DATASET_DEFAULTS:
+    if dataset_identifier not in _DATASET_DEFAULTS:
         raise ValueError(
-            f"Unknown dataset_name {dataset_name!r}; expected 'coco' or 'mot17'."
+            f"Unknown dataset_identifier {dataset_identifier!r}; expected 'coco' or 'mot17'."
         )
 
-    defaults = _DATASET_DEFAULTS[dataset_name]
+    defaults = _DATASET_DEFAULTS[dataset_identifier]
     dataset_name = defaults["dataset_name"]
     collate_fn = collate_fn or defaults["collate_fn"]
     batch_size = batch_size if batch_size is not None else defaults["batch_size"]
 
-    if dataset_name == "coco":
+    if dataset_identifier == "coco":
         train_ds, val_ds = _build_image_datasets(
             dataset_name, data_dir, seed, subset_size
         )
