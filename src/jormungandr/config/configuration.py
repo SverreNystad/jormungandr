@@ -186,7 +186,7 @@ class DecoderConfig(BaseModel):
 class EncoderConfig(BaseModel):
     encoder_type: str = Field(
         default="Mamba",
-        description="Type of encoder to use (e.g., 'Mamba', 'Transformer')",
+        description="Type of encoder to use (e.g., 'mamba', 'detr' or 'mamba_ffn')",
     )
     num_layers: int = Field(default=6, description="Number of layers in the encoder")
     use_pre_trained: bool = Field(
