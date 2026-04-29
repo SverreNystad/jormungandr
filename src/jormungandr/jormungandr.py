@@ -12,7 +12,7 @@ import torch
 import wandb
 import os
 
-from jormungandr.encoder import MambaEncoder
+from jormungandr.encoder import MambaEncoder, DETREncoder
 from jormungandr.detr_decoder import DETRDecoder
 from jormungandr.output_head import FCNNPredictionHead
 from jormungandr.backbone import Backbone
@@ -52,11 +52,18 @@ class Jormungandr(nn.Module):
         ).to(device)
 
         # Encoders
-        self.spatial_encoder = MambaEncoder(
-            model_dimension=config.model_dimension,
-            hidden_state_dim=config.spatial_encoder.hidden_state_dim,
-            num_layers=config.spatial_encoder.num_layers,
-        ).to(device)
+        match config.spatial_encoder.encoder_type:
+            case "mamba":
+                self.spatial_encoder = MambaEncoder(
+                    model_dimension=config.model_dimension,
+                    hidden_state_dim=config.spatial_encoder.hidden_state_dim,
+                    num_layers=config.spatial_encoder.num_layers,
+                ).to(device)
+            case "detr":
+                self.spatial_encoder = DETREncoder(
+                    model_name=config.detr_name,
+                    use_pre_trained=config.spatial_encoder.use_pre_trained,
+                ).to(device)
         self.temporal_encoder = MambaEncoder(
             model_dimension=config.model_dimension,
             hidden_state_dim=config.temporal_encoder.hidden_state_dim,
