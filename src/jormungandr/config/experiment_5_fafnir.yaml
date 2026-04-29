@@ -21,7 +21,7 @@ trainer:
     giou_cost: 2.0  
     num_labels: 91
     eos_coefficient: 0.1
-    auxiliary_loss: true
+    auxiliary_loss: false
     bbox_loss_coefficient: 5.0
     giou_loss_coefficient: 2.0
     decoder_layers: 6
@@ -40,6 +40,6 @@ model:
     freeze_backbone: true
   decoder:
     freeze_decoder: true
-    auxiliary_loss: true
+    auxiliary_loss: false
   output_head:
     freeze_prediction_head: true
