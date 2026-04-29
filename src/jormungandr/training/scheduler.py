@@ -17,6 +17,7 @@ from jormungandr.config.configuration import SchedulerConfig
 
 SCHEDULER_REGISTRY: dict[str, type] = {
     "StepLR": lr_scheduler.StepLR,
+    "MultiStepLR": lr_scheduler.MultiStepLR,
     "CosineAnnealingLR": lr_scheduler.CosineAnnealingLR,
     "CosineAnnealingWarmRestarts": lr_scheduler.CosineAnnealingWarmRestarts,
     "ReduceLROnPlateau": lr_scheduler.ReduceLROnPlateau,
