@@ -1063,6 +1063,7 @@ dependencies = [
     { name = "datasets", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "loguru", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "mamba-ssm", extra = ["causal-conv1d"], marker = "sys_platform == 'linux'" },
+    { name = "matplotlib", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "numpy", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "pandas", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "pillow", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
@@ -1109,6 +1110,7 @@ requires-dist = [
     { name = "datasets", specifier = ">=4.6.1" },
     { name = "loguru", specifier = ">=0.7.3" },
     { name = "mamba-ssm", extras = ["causal-conv1d"], marker = "sys_platform == 'linux'", specifier = ">=2.2.5" },
+    { name = "matplotlib", specifier = ">=3.10.8" },
     { name = "numpy", specifier = ">=2.0.0" },
     { name = "pandas", specifier = ">=2.3.3" },
     { name = "pillow", specifier = ">=12.1.1" },
@@ -3080,16 +3082,16 @@ dependencies = [
     { name = "torch", version = "2.10.0+cu129", source = { registry = "https://download.pytorch.org/whl/cu129" }, marker = "sys_platform == 'linux'" },
 ]
 wheels = [
-    { url = "https://download-r2.pytorch.org/whl/cu129/torchvision-0.25.0%2Bcu129-cp312-cp312-manylinux_2_28_aarch64.whl", upload-time = "2026-01-20T18:32:46Z" },
-    { url = "https://download-r2.pytorch.org/whl/cu129/torchvision-0.25.0%2Bcu129-cp312-cp312-manylinux_2_28_x86_64.whl", upload-time = "2026-01-20T18:32:46Z" },
-    { url = "https://download-r2.pytorch.org/whl/cu129/torchvision-0.25.0%2Bcu129-cp313-cp313-manylinux_2_28_aarch64.whl", upload-time = "2026-01-20T18:32:46Z" },
-    { url = "https://download-r2.pytorch.org/whl/cu129/torchvision-0.25.0%2Bcu129-cp313-cp313-manylinux_2_28_x86_64.whl", upload-time = "2026-01-20T18:32:46Z" },
-    { url = "https://download-r2.pytorch.org/whl/cu129/torchvision-0.25.0%2Bcu129-cp313-cp313t-manylinux_2_28_aarch64.whl", upload-time = "2026-01-20T18:32:46Z" },
-    { url = "https://download-r2.pytorch.org/whl/cu129/torchvision-0.25.0%2Bcu129-cp313-cp313t-manylinux_2_28_x86_64.whl", upload-time = "2026-01-20T18:32:46Z" },
-    { url = "https://download-r2.pytorch.org/whl/cu129/torchvision-0.25.0%2Bcu129-cp314-cp314-manylinux_2_28_aarch64.whl", upload-time = "2026-01-20T18:32:46Z" },
-    { url = "https://download-r2.pytorch.org/whl/cu129/torchvision-0.25.0%2Bcu129-cp314-cp314-manylinux_2_28_x86_64.whl", upload-time = "2026-01-20T18:32:47Z" },
-    { url = "https://download-r2.pytorch.org/whl/cu129/torchvision-0.25.0%2Bcu129-cp314-cp314t-manylinux_2_28_aarch64.whl", upload-time = "2026-01-20T18:32:47Z" },
-    { url = "https://download-r2.pytorch.org/whl/cu129/torchvision-0.25.0%2Bcu129-cp314-cp314t-manylinux_2_28_x86_64.whl", upload-time = "2026-01-20T18:32:47Z" },
+    { url = "https://download-r2.pytorch.org/whl/cu129/torchvision-0.25.0%2Bcu129-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:575549b417b9f64ddf67412a6b570174d566cb47a0f978355f81007fb5d62a43", upload-time = "2026-04-27T19:00:27Z" },
+    { url = "https://download-r2.pytorch.org/whl/cu129/torchvision-0.25.0%2Bcu129-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:5d741dff079cd9b9dfe690f2f14ba6db22bd9415838726ab795c378a12adbc3b", upload-time = "2026-04-27T19:00:28Z" },
+    { url = "https://download-r2.pytorch.org/whl/cu129/torchvision-0.25.0%2Bcu129-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:aa90d723a46d2d1e93da4632f8a4b1c989ba4512d09d71fc1e2e6b3495b466a6", upload-time = "2026-04-27T19:00:29Z" },
+    { url = "https://download-r2.pytorch.org/whl/cu129/torchvision-0.25.0%2Bcu129-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:cfab8bae06354a09485b9890fc8b909e54c5ac0df84113f44ef0d7dbbba444b3", upload-time = "2026-04-27T19:00:30Z" },
+    { url = "https://download-r2.pytorch.org/whl/cu129/torchvision-0.25.0%2Bcu129-cp313-cp313t-manylinux_2_28_aarch64.whl", hash = "sha256:713092899df061368fd148b7118042d37d3f1eb294c0ca9f4b2d9b80f648b82f", upload-time = "2026-04-27T19:00:31Z" },
+    { url = "https://download-r2.pytorch.org/whl/cu129/torchvision-0.25.0%2Bcu129-cp313-cp313t-manylinux_2_28_x86_64.whl", hash = "sha256:e5f82fa7ff5246e8aa48f1cfb8a33982e56a8eaa968d2bdc9587a96ef68f0624", upload-time = "2026-04-27T19:00:31Z" },
+    { url = "https://download-r2.pytorch.org/whl/cu129/torchvision-0.25.0%2Bcu129-cp314-cp314-manylinux_2_28_aarch64.whl", hash = "sha256:f5304c6677a3fb98f10bb66809a872fe70d1328daf8b542e95656bf8b8734d64", upload-time = "2026-04-27T19:00:33Z" },
+    { url = "https://download-r2.pytorch.org/whl/cu129/torchvision-0.25.0%2Bcu129-cp314-cp314-manylinux_2_28_x86_64.whl", hash = "sha256:efa5d6f90ea642c99ee23fe28c19feae453e006b0356ad643f910397e895e7cb", upload-time = "2026-04-27T19:00:34Z" },
+    { url = "https://download-r2.pytorch.org/whl/cu129/torchvision-0.25.0%2Bcu129-cp314-cp314t-manylinux_2_28_aarch64.whl", hash = "sha256:bfa6d966ed4f2925ab9602f8b15fe761c42d186dce5fb365d864536b083d20fc", upload-time = "2026-04-27T19:00:34Z" },
+    { url = "https://download-r2.pytorch.org/whl/cu129/torchvision-0.25.0%2Bcu129-cp314-cp314t-manylinux_2_28_x86_64.whl", hash = "sha256:614df3bf4f03693e76be28b9074e75097806590fba8bf1ec70c7d4385e064574", upload-time = "2026-04-27T19:00:35Z" },
 ]
 
 [[package]]
