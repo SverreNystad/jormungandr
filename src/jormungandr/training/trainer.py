@@ -38,7 +38,7 @@ from jormungandr.jormungandr import Jormungandr
 from jormungandr.training.criterion import build_criterion
 from jormungandr.training.scheduler import build_scheduler
 from jormungandr.training.coco_eval import CocoEvaluator
-from jormungandr.training.visualization import log_validation_images
+from jormungandr.training.visualization import log_validation_images, log_encoder_activation_maps
 
 CONFIG = load_config("config.yaml")
 MODELS_PATH = "models/"
@@ -269,6 +269,30 @@ def train_one_epoch(
     return average_loss
 
 
+def _extract_encoder_output(
+    model: Fafnir | Jormungandr,
+    pixel_values: torch.Tensor,
+    pixel_mask: torch.Tensor,
+    device: torch.device | str,
+) -> tuple[torch.Tensor, tuple[int, int]]:
+    pixel_values = pixel_values.to(device)
+    pixel_mask = pixel_mask.to(device)
+    feature_maps, mask = model.backbone.forward(pixel_values, pixel_mask)
+    h_0, w_0 = feature_maps.shape[-2:]
+    flat = model.backbone.project_feature_maps(feature_maps).flatten(2).permute(0, 2, 1)
+    if isinstance(model, Fafnir):
+        pos = model.embedder.forward(
+            shape=feature_maps.shape, device=device, dtype=feature_maps.dtype, mask=mask
+        )
+        enc = model.encoder.forward(flat, position_embedding=pos, pixel_mask=mask.flatten(1))
+    else:
+        pos = model.spatial_embedder.forward(
+            shape=feature_maps.shape, device=device, dtype=feature_maps.dtype, mask=mask
+        )
+        enc = model.spatial_encoder.forward(flat, position_embedding=pos, pixel_mask=mask.flatten(1))
+    return enc, (h_0, w_0)
+
+
 # Disable gradient computation and reduce memory consumption.
 @torch.no_grad()
 def run_validation(
@@ -350,14 +374,26 @@ def run_validation(
     coco_metrics = evaluator.evaluate()
     average_loss_dict = {k: v / (i + 1) for k, v in running_loss_dict.items()}
 
+    assert viz_batch is not None
     wandb_images = log_validation_images(
         **viz_batch,
         num_images=config.trainer.num_log_images,
         score_threshold=config.trainer.viz_score_threshold,
     )
+    enc, feature_map_hw = _extract_encoder_output(
+        model, viz_batch["pixel_values"], viz_batch["pixel_mask"], device
+    )
+    activation_images = log_encoder_activation_maps(
+        encoder_output=enc,
+        feature_map_hw=feature_map_hw,
+        pixel_values=viz_batch["pixel_values"],
+        pixel_mask=viz_batch["pixel_mask"],
+        num_images=config.trainer.num_log_images,
+    )
     wandb.log(
         {
             "val/images": wandb_images,
+            "val/encoder_activations": activation_images,
             **{f"val/loss/{k}": v for k, v in average_loss_dict.items()},
             **{f"val/metrics/{k}": v for k, v in coco_metrics.items()},
         }

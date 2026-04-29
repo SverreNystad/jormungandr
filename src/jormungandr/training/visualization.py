@@ -1,6 +1,21 @@
+"""
+Visualization utilities for object detection predictions and encoder activations.
+
+Produces W&B-compatible image objects with bounding-box overlays for validation
+logging, and side-by-side encoder activation heatmaps for interpretability.
+ImageNet normalization is reversed before rendering.
+
+Functions:
+    log_validation_images        -- render GT and predicted boxes onto validation images.
+    make_encoder_activation_maps -- generate heatmap arrays from encoder output L2 norms.
+    log_encoder_activation_maps  -- W&B wrapper around make_encoder_activation_maps.
+"""
+
 import numpy as np
 import torch
+import torch.nn.functional as F
 import wandb
+import matplotlib
 from transformers.image_transforms import center_to_corners_format
 
 _IMAGENET_MEAN = torch.tensor([0.485, 0.456, 0.406])
@@ -189,3 +204,125 @@ def log_validation_images(
         )
 
     return wandb_images
+
+
+def make_encoder_activation_maps(
+    encoder_output: torch.Tensor,
+    feature_map_hw: tuple[int, int],
+    pixel_values: torch.Tensor,
+    pixel_mask: torch.Tensor | None = None,
+    num_images: int = 4,
+    colormap: str = "jet",
+    alpha: float = 0.5,
+) -> list[np.ndarray]:
+    """Render encoder activation maps alongside the original image.
+
+    Args:
+        encoder_output: (B, seq_len, D) — output of the encoder for a single
+            frame or batch.  For the Jormungandr temporal encoder the caller
+            should slice the relevant frames first.
+        feature_map_hw: (h_0, w_0) spatial dimensions of the backbone feature
+            map (i.e. ``feature_maps.shape[-2:]``).  Must satisfy
+            ``h_0 * w_0 == seq_len``.
+        pixel_values: (B, 3, H, W) ImageNet-normalised pixel values.
+        pixel_mask: (B, H, W) with 1 for valid pixels, 0 for padding.
+        num_images: how many batch items to render.
+        colormap: matplotlib colormap name for the heatmap.
+        alpha: blend weight for the overlay (0 = original, 1 = heatmap).
+
+    Returns:
+        List of (H, W*3, 3) uint8 arrays: [original | heatmap | overlay].
+    """
+    h_0, w_0 = feature_map_hw
+    expected_seq = h_0 * w_0
+    if encoder_output.shape[1] != expected_seq:
+        raise ValueError(
+            f"encoder_output seq_len {encoder_output.shape[1]} != "
+            f"h_0*w_0 = {h_0}*{w_0} = {expected_seq}"
+        )
+
+    cmap = matplotlib.colormaps[colormap]
+    encoder_output = encoder_output.detach().cpu().float()
+    pixel_values = pixel_values.detach().cpu()
+
+    results: list[np.ndarray] = []
+
+    for b in range(min(num_images, pixel_values.shape[0])):
+        # Denormalise original image → (H, W, 3) float [0, 1]
+        img = (
+            pixel_values[b] * _IMAGENET_STD[:, None, None]
+            + _IMAGENET_MEAN[:, None, None]
+        )
+        img = img.clamp(0, 1).permute(1, 2, 0).numpy()
+
+        # Crop padding using the mask
+        if pixel_mask is not None:
+            m = pixel_mask[b].cpu()
+            actual_h = int(m.any(dim=-1).sum().item())
+            actual_w = int(m.any(dim=-2).sum().item())
+            img = img[:actual_h, :actual_w]
+
+        H, W = img.shape[:2]
+
+        # Activation intensity: L2 norm across the feature dimension → (h_0, w_0)
+        act = encoder_output[b].norm(dim=-1).reshape(h_0, w_0)
+
+        # Normalise to [0, 1]
+        a_min, a_max = act.min(), act.max()
+        act = (act - a_min) / (a_max - a_min + 1e-8)
+
+        # Upsample to image resolution
+        act_up = (
+            F.interpolate(
+                act.unsqueeze(0).unsqueeze(0),
+                size=(H, W),
+                mode="bilinear",
+                align_corners=False,
+            )
+            .squeeze()
+            .numpy()
+        )
+
+        # Colourmap → (H, W, 3) float [0, 1]
+        heatmap = cmap(act_up)[..., :3]
+
+        # Overlay: alpha-blend heatmap over original
+        overlay = ((1 - alpha) * img + alpha * heatmap).clip(0, 1)
+
+        # Stack side-by-side and convert to uint8
+        combined = np.concatenate(
+            [
+                (img * 255).astype(np.uint8),
+                (heatmap * 255).astype(np.uint8),
+                (overlay * 255).astype(np.uint8),
+            ],
+            axis=1,
+        )
+        results.append(combined)
+
+    return results
+
+
+def log_encoder_activation_maps(
+    encoder_output: torch.Tensor,
+    feature_map_hw: tuple[int, int],
+    pixel_values: torch.Tensor,
+    pixel_mask: torch.Tensor | None = None,
+    num_images: int = 4,
+    colormap: str = "jet",
+    alpha: float = 0.5,
+) -> list[wandb.Image]:
+    """W&B wrapper around :func:`make_encoder_activation_maps`."""
+    panels = make_encoder_activation_maps(
+        encoder_output=encoder_output,
+        feature_map_hw=feature_map_hw,
+        pixel_values=pixel_values,
+        pixel_mask=pixel_mask,
+        num_images=num_images,
+        colormap=colormap,
+        alpha=alpha,
+    )
+    return [
+        wandb.Image(panel, caption="original | activation | overlay")
+        for panel in panels
+    ]
