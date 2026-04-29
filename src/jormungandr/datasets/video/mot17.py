@@ -62,6 +62,7 @@ class VODDataset(Dataset):
         ]
         self.clips: list[tuple[str, list[str]]] = []
         self.gt_annotations: dict[str, pd.DataFrame] = {}
+        self._seq_offset = {d: i for i, d in enumerate(sequence_dirs)}
 
         """
         Sequence to sequence predictions: for each sequence, we can create multiple clips by sliding a window of size n_frames across the frames. For example, if a sequence has 10 frames and n_frames=4, we can create the following clips:
@@ -134,11 +135,12 @@ class VODDataset(Dataset):
         img = Image.open(frame_path).convert("RGB")
 
         frame_number = int(os.path.splitext(frame_file)[0])
+        image_id = self._seq_offset[seq_dir] * 1_000_000 + frame_number
         gt = self.gt_annotations[seq_dir]
 
         rows = gt[gt["frame_number"] == frame_number]
         if rows.empty:
-            return img, {"image_id": frame_number, "annotations": []}
+            return img, {"image_id": image_id, "annotations": []}
 
         row = rows.iloc[0]
         annotations = [
@@ -150,7 +152,7 @@ class VODDataset(Dataset):
             }
             for bbox, cat in zip(row["bbox"], row["category"])
         ]
-        return img, {"image_id": frame_number, "annotations": annotations}
+        return img, {"image_id": image_id, "annotations": annotations}
 
 
 def _build_vod_datasets(
