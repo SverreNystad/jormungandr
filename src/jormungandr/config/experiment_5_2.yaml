@@ -21,7 +21,7 @@ trainer:
     giou_cost: 2.0  
     num_labels: 91
     eos_coefficient: 0.1
-    auxiliary_loss: false
+    auxiliary_loss: true
     bbox_loss_coefficient: 5.0
     giou_loss_coefficient: 2.0
     decoder_layers: 6
@@ -35,18 +35,19 @@ model:
   spatial_encoder:
     encoder_type: "mamba"
     num_layers: 12
-    hidden_state_dim: 64
+    hidden_state_dim: 16
   temporal_encoder:
     encoder_type: "mamba"
-    num_layers: 12
+    num_layers: 0
     hidden_state_dim: 64
   backbone:
     freeze_backbone: true
   decoder:
     freeze_decoder: false
     use_pre_trained: true
-    auxiliary_loss: false
+    auxiliary_loss: true
   output_head:
     freeze_prediction_head: false
     use_pre_trained: true
+  still_image_checkpoint_name: "sverrenystad-ntnu/Fafnir/mamba_giouloss_20260423_172048:v40"
 
