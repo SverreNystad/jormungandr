@@ -11,6 +11,7 @@ Functions:
 """
 
 from functools import lru_cache
+from torch.nn import Module
 from transformers import DetrForObjectDetection, DetrConfig
 
 
@@ -34,3 +35,14 @@ def fetch_detr_model(
         return DetrForObjectDetection.from_pretrained(model_name, config=config)
 
     return DetrForObjectDetection.from_pretrained(model_name, config=config)
+
+
+def count_parameters(model: Module) -> tuple[int, int, int]:
+    """Count the number of trainable and non-trainable parameters in a PyTorch model."""
+    trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    non_trainable = sum(p.numel() for p in model.parameters() if not p.requires_grad)
+    total_params = trainable + non_trainable
+    print(f"Total parameters: {total_params}")
+    print(f"Trainable parameters: {trainable}")
+    print(f"Non-trainable parameters: {non_trainable}")
+    return total_params, trainable, non_trainable
